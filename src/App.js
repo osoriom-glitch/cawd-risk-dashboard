@@ -467,7 +467,7 @@ export default function App() {
                 Monte Carlo PRA + investment simulator · SAM model · risk-averse objective: maximize E[U(−C)] with exponential utility
               </p>
               <span style={{ display: "inline-block", marginTop: 6, borderRadius: 20, background: "#1e3a5f", padding: "3px 12px", fontSize: 11, fontWeight: 700, color: "#7dd3fc", letterSpacing: "0.06em" }}>
-                Stanford MS&E 250B · Spring 2026 · Annabelle · Khang · Ramesh · Maura Osorio
+                Stanford MS&E 250B · Spring 2026 · Annabelle Jayadinata · Khang Do · Ramesh Manian· Maura Osorio
               </span>
             </div>
             <button onClick={() => setRerun((x) => x + 1)}
