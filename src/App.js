@@ -1,53 +1,55 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  LineChart, Line, CartesianGrid, Legend, Cell, ScatterChart, Scatter, ReferenceLine,
+  LineChart, Line, CartesianGrid, Legend, Cell, ReferenceLine,
 } from "recharts";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HISTORICAL DATA — parsed from CAWD Spill Tracking 2000–2026
+// HISTORICAL DATA — parsed from CAWD Spill Tracking xlsx 2000–2026
+// mode keys: B=Blockage, F=Pipe Failure, P=Pump Failure, H=Hydraulic Overload, O=Operational
 // ─────────────────────────────────────────────────────────────────────────────
 const HISTORICAL_DATA = [
-  {"year":2000,"count":11,"totalGallons":2175,"spills":[{"gallons":75,"mode":"R"},{"gallons":800,"mode":"G"},{"gallons":100,"mode":"R"},{"gallons":100,"mode":"G"},{"gallons":50,"mode":"G"},{"gallons":20,"mode":"G"},{"gallons":50,"mode":"G"},{"gallons":500,"mode":"G"},{"gallons":30,"mode":"R"},{"gallons":150,"mode":"G"},{"gallons":300,"mode":"G"}]},
-  {"year":2001,"count":16,"totalGallons":5760,"spills":[{"gallons":10,"mode":"G"},{"gallons":800,"mode":"R"},{"gallons":400,"mode":"G"},{"gallons":50,"mode":"G"},{"gallons":300,"mode":"G"},{"gallons":450,"mode":"R"},{"gallons":300,"mode":"G"},{"gallons":650,"mode":"G"},{"gallons":500,"mode":"G"},{"gallons":200,"mode":"R"},{"gallons":100,"mode":"G"},{"gallons":300,"mode":"R"},{"gallons":200,"mode":"G"},{"gallons":500,"mode":"G"},{"gallons":500,"mode":"G"},{"gallons":500,"mode":"G"}]},
-  {"year":2002,"count":16,"totalGallons":3180,"spills":[{"gallons":100,"mode":"D"},{"gallons":250,"mode":"G"},{"gallons":50,"mode":"R"},{"gallons":100,"mode":"R"},{"gallons":500,"mode":"R"},{"gallons":30,"mode":"R"},{"gallons":40,"mode":"R"},{"gallons":50,"mode":"R"},{"gallons":60,"mode":"R"},{"gallons":1000,"mode":"R"},{"gallons":70,"mode":"R"},{"gallons":50,"mode":"G"},{"gallons":80,"mode":"G"},{"gallons":450,"mode":"G"},{"gallons":100,"mode":"R"},{"gallons":250,"mode":"F"}]},
-  {"year":2003,"count":14,"totalGallons":3445,"spills":[{"gallons":40,"mode":"R"},{"gallons":100,"mode":"R"},{"gallons":1000,"mode":"R"},{"gallons":50,"mode":"R"},{"gallons":75,"mode":"R"},{"gallons":40,"mode":"D"},{"gallons":40,"mode":"G"},{"gallons":500,"mode":"R"},{"gallons":60,"mode":"G"},{"gallons":400,"mode":"G"},{"gallons":150,"mode":"P"},{"gallons":540,"mode":"R"},{"gallons":300,"mode":"R"},{"gallons":150,"mode":"G"}]},
-  {"year":2004,"count":10,"totalGallons":2815,"spills":[{"gallons":500,"mode":"R"},{"gallons":900,"mode":"D"},{"gallons":80,"mode":"G"},{"gallons":60,"mode":"R"},{"gallons":100,"mode":"R"},{"gallons":25,"mode":"R"},{"gallons":150,"mode":"R"},{"gallons":350,"mode":"R"},{"gallons":50,"mode":"R"},{"gallons":600,"mode":"R"}]},
-  {"year":2005,"count":5,"totalGallons":825,"spills":[{"gallons":300,"mode":"R"},{"gallons":225,"mode":"D"},{"gallons":180,"mode":"G"},{"gallons":20,"mode":"R"},{"gallons":100,"mode":"G"}]},
-  {"year":2006,"count":2,"totalGallons":200,"spills":[{"gallons":150,"mode":"G"},{"gallons":50,"mode":"R"}]},
-  {"year":2007,"count":5,"totalGallons":1480,"spills":[{"gallons":400,"mode":"R"},{"gallons":600,"mode":"G"},{"gallons":200,"mode":"R"},{"gallons":250,"mode":"R"},{"gallons":30,"mode":"D"}]},
-  {"year":2008,"count":6,"totalGallons":1380,"spills":[{"gallons":135,"mode":"R"},{"gallons":85,"mode":"R"},{"gallons":35,"mode":"G"},{"gallons":400,"mode":"G"},{"gallons":325,"mode":"G"},{"gallons":400,"mode":"F"}]},
-  {"year":2009,"count":8,"totalGallons":1835,"spills":[{"gallons":250,"mode":"R"},{"gallons":60,"mode":"R"},{"gallons":150,"mode":"R"},{"gallons":65,"mode":"R"},{"gallons":150,"mode":"R"},{"gallons":200,"mode":"R"},{"gallons":500,"mode":"R"},{"gallons":460,"mode":"G"}]},
-  {"year":2010,"count":4,"totalGallons":400,"spills":[{"gallons":50,"mode":"R"},{"gallons":150,"mode":"R"},{"gallons":50,"mode":"F"},{"gallons":150,"mode":"G"}]},
-  {"year":2011,"count":8,"totalGallons":2450,"spills":[{"gallons":50,"mode":"R"},{"gallons":55,"mode":"R"},{"gallons":80,"mode":"R"},{"gallons":650,"mode":"R"},{"gallons":200,"mode":"G"},{"gallons":30,"mode":"G"},{"gallons":560,"mode":"G"},{"gallons":825,"mode":"R"}]},
-  {"year":2012,"count":8,"totalGallons":5880,"spills":[{"gallons":40,"mode":"G"},{"gallons":40,"mode":"R"},{"gallons":2400,"mode":"R"},{"gallons":900,"mode":"G"},{"gallons":900,"mode":"G"},{"gallons":500,"mode":"D"},{"gallons":850,"mode":"G"},{"gallons":250,"mode":"G"}]},
-  {"year":2013,"count":5,"totalGallons":3765,"spills":[{"gallons":700,"mode":"R"},{"gallons":50,"mode":"R"},{"gallons":40,"mode":"R"},{"gallons":2800,"mode":"G"},{"gallons":175,"mode":"R"}]},
-  {"year":2014,"count":7,"totalGallons":6488,"spills":[{"gallons":30,"mode":"R"},{"gallons":85,"mode":"R"},{"gallons":257,"mode":"R"},{"gallons":522,"mode":"R"},{"gallons":258,"mode":"R"},{"gallons":4500,"mode":"R"},{"gallons":836,"mode":"R"}]},
-  {"year":2015,"count":4,"totalGallons":14471,"spills":[{"gallons":1557,"mode":"R"},{"gallons":40,"mode":"G"},{"gallons":10474,"mode":"R"},{"gallons":2400,"mode":"G"}]},
-  {"year":2016,"count":5,"totalGallons":1600,"spills":[{"gallons":212,"mode":"R"},{"gallons":688,"mode":"D"},{"gallons":10,"mode":"R"},{"gallons":630,"mode":"R"},{"gallons":60,"mode":"G"}]},
-  {"year":2017,"count":4,"totalGallons":147447,"spills":[{"gallons":1650,"mode":"R"},{"gallons":145000,"mode":"F"},{"gallons":17,"mode":"F"},{"gallons":780,"mode":"R"}]},
-  {"year":2018,"count":3,"totalGallons":888,"spills":[{"gallons":380,"mode":"D"},{"gallons":180,"mode":"F"},{"gallons":328,"mode":"G"}]},
-  {"year":2019,"count":1,"totalGallons":2008,"spills":[{"gallons":2008,"mode":"G"}]},
+  {"year":2000,"count":11,"totalGallons":2175,"spills":[{"gallons":75,"mode":"B"},{"gallons":800,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":20,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":30,"mode":"B"},{"gallons":150,"mode":"B"},{"gallons":300,"mode":"B"}]},
+  {"year":2001,"count":16,"totalGallons":5760,"spills":[{"gallons":10,"mode":"B"},{"gallons":800,"mode":"B"},{"gallons":400,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":300,"mode":"B"},{"gallons":450,"mode":"B"},{"gallons":300,"mode":"B"},{"gallons":650,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":200,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":300,"mode":"B"},{"gallons":200,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":500,"mode":"B"}]},
+  {"year":2002,"count":16,"totalGallons":3180,"spills":[{"gallons":100,"mode":"O"},{"gallons":250,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":30,"mode":"B"},{"gallons":40,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":60,"mode":"B"},{"gallons":1000,"mode":"B"},{"gallons":70,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":80,"mode":"B"},{"gallons":450,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":250,"mode":"F"}]},
+  {"year":2003,"count":14,"totalGallons":3445,"spills":[{"gallons":40,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":1000,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":75,"mode":"B"},{"gallons":40,"mode":"B"},{"gallons":40,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":60,"mode":"B"},{"gallons":400,"mode":"B"},{"gallons":150,"mode":"P"},{"gallons":540,"mode":"B"},{"gallons":300,"mode":"B"},{"gallons":150,"mode":"B"}]},
+  {"year":2004,"count":10,"totalGallons":2815,"spills":[{"gallons":500,"mode":"B"},{"gallons":900,"mode":"B"},{"gallons":80,"mode":"B"},{"gallons":60,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":25,"mode":"B"},{"gallons":150,"mode":"B"},{"gallons":350,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":600,"mode":"B"}]},
+  {"year":2005,"count":5,"totalGallons":825,"spills":[{"gallons":300,"mode":"B"},{"gallons":225,"mode":"B"},{"gallons":180,"mode":"B"},{"gallons":20,"mode":"B"},{"gallons":100,"mode":"B"}]},
+  {"year":2006,"count":2,"totalGallons":200,"spills":[{"gallons":150,"mode":"B"},{"gallons":50,"mode":"B"}]},
+  {"year":2007,"count":5,"totalGallons":1480,"spills":[{"gallons":400,"mode":"B"},{"gallons":600,"mode":"B"},{"gallons":200,"mode":"B"},{"gallons":250,"mode":"B"},{"gallons":30,"mode":"B"}]},
+  {"year":2008,"count":6,"totalGallons":1380,"spills":[{"gallons":135,"mode":"B"},{"gallons":85,"mode":"B"},{"gallons":35,"mode":"B"},{"gallons":400,"mode":"B"},{"gallons":325,"mode":"B"},{"gallons":400,"mode":"F"}]},
+  {"year":2009,"count":8,"totalGallons":1835,"spills":[{"gallons":250,"mode":"B"},{"gallons":60,"mode":"B"},{"gallons":150,"mode":"B"},{"gallons":65,"mode":"B"},{"gallons":150,"mode":"B"},{"gallons":200,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":460,"mode":"B"}]},
+  {"year":2010,"count":4,"totalGallons":400,"spills":[{"gallons":50,"mode":"B"},{"gallons":150,"mode":"B"},{"gallons":50,"mode":"F"},{"gallons":150,"mode":"B"}]},
+  {"year":2011,"count":8,"totalGallons":2450,"spills":[{"gallons":50,"mode":"B"},{"gallons":55,"mode":"B"},{"gallons":80,"mode":"B"},{"gallons":650,"mode":"B"},{"gallons":200,"mode":"B"},{"gallons":30,"mode":"B"},{"gallons":560,"mode":"B"},{"gallons":825,"mode":"B"}]},
+  {"year":2012,"count":8,"totalGallons":5880,"spills":[{"gallons":40,"mode":"B"},{"gallons":40,"mode":"B"},{"gallons":2400,"mode":"B"},{"gallons":900,"mode":"B"},{"gallons":900,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":850,"mode":"B"},{"gallons":250,"mode":"B"}]},
+  {"year":2013,"count":5,"totalGallons":3765,"spills":[{"gallons":700,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":40,"mode":"B"},{"gallons":2800,"mode":"B"},{"gallons":175,"mode":"B"}]},
+  {"year":2014,"count":7,"totalGallons":6488,"spills":[{"gallons":30,"mode":"B"},{"gallons":85,"mode":"B"},{"gallons":257,"mode":"B"},{"gallons":522,"mode":"B"},{"gallons":258,"mode":"B"},{"gallons":4500,"mode":"B"},{"gallons":836,"mode":"B"}]},
+  {"year":2015,"count":4,"totalGallons":14471,"spills":[{"gallons":1557,"mode":"B"},{"gallons":40,"mode":"B"},{"gallons":10474,"mode":"B"},{"gallons":2400,"mode":"B"}]},
+  {"year":2016,"count":5,"totalGallons":1600,"spills":[{"gallons":212,"mode":"B"},{"gallons":688,"mode":"B"},{"gallons":10,"mode":"B"},{"gallons":630,"mode":"B"},{"gallons":60,"mode":"O"}]},
+  {"year":2017,"count":4,"totalGallons":147447,"spills":[{"gallons":1650,"mode":"B"},{"gallons":145000,"mode":"F"},{"gallons":17,"mode":"F"},{"gallons":780,"mode":"B"}]},
+  {"year":2018,"count":3,"totalGallons":888,"spills":[{"gallons":380,"mode":"B"},{"gallons":180,"mode":"F"},{"gallons":328,"mode":"B"}]},
+  {"year":2019,"count":1,"totalGallons":2008,"spills":[{"gallons":2008,"mode":"F"}]},
   {"year":2020,"count":0,"totalGallons":0,"spills":[]},
-  {"year":2021,"count":4,"totalGallons":2849,"spills":[{"gallons":476,"mode":"R"},{"gallons":802,"mode":"R"},{"gallons":454,"mode":"G"},{"gallons":1117,"mode":"R"}]},
-  {"year":2022,"count":6,"totalGallons":7891,"spills":[{"gallons":90,"mode":"G"},{"gallons":20,"mode":"R"},{"gallons":1896,"mode":"R"},{"gallons":5625,"mode":"R"},{"gallons":129,"mode":"R"},{"gallons":131,"mode":"R"}]},
-  {"year":2023,"count":10,"totalGallons":100705,"spills":[{"gallons":5419,"mode":"R"},{"gallons":506,"mode":"D"},{"gallons":108,"mode":"R"},{"gallons":1301,"mode":"R"},{"gallons":361,"mode":"F"},{"gallons":48269,"mode":"F"},{"gallons":222,"mode":"R"},{"gallons":357,"mode":"F"},{"gallons":44159,"mode":"F"},{"gallons":3,"mode":"F"}]},
-  {"year":2024,"count":2,"totalGallons":24458,"spills":[{"gallons":1777,"mode":"R"},{"gallons":22681,"mode":"F"}]},
-  {"year":2025,"count":4,"totalGallons":10999,"spills":[{"gallons":9156,"mode":"F"},{"gallons":1798,"mode":"F"},{"gallons":20,"mode":"G"},{"gallons":25,"mode":"F"}]},
+  {"year":2021,"count":4,"totalGallons":2849,"spills":[{"gallons":476,"mode":"B"},{"gallons":802,"mode":"B"},{"gallons":454,"mode":"B"},{"gallons":1117,"mode":"B"}]},
+  {"year":2022,"count":6,"totalGallons":7891,"spills":[{"gallons":90,"mode":"B"},{"gallons":20,"mode":"B"},{"gallons":1896,"mode":"B"},{"gallons":5625,"mode":"B"},{"gallons":129,"mode":"B"},{"gallons":131,"mode":"B"}]},
+  {"year":2023,"count":10,"totalGallons":100705,"spills":[{"gallons":5419,"mode":"B"},{"gallons":506,"mode":"B"},{"gallons":108,"mode":"B"},{"gallons":1301,"mode":"B"},{"gallons":361,"mode":"F"},{"gallons":48269,"mode":"F"},{"gallons":222,"mode":"B"},{"gallons":357,"mode":"F"},{"gallons":44159,"mode":"F"},{"gallons":3,"mode":"F"}]},
+  {"year":2024,"count":2,"totalGallons":24458,"spills":[{"gallons":1777,"mode":"B"},{"gallons":22681,"mode":"F"}]},
+  {"year":2025,"count":4,"totalGallons":10999,"spills":[{"gallons":9156,"mode":"F"},{"gallons":1798,"mode":"F"},{"gallons":20,"mode":"B"},{"gallons":25,"mode":"F"}]},
   {"year":2026,"count":1,"totalGallons":9429,"spills":[{"gallons":9429,"mode":"F"}]},
 ];
 
 const CURRENT_YEAR = 2026;
+const SYSTEM_MILES = 77.57;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CONSTANTS
+// FAILURE MODES — exactly matching Formulas_ failure_modes list
 // ─────────────────────────────────────────────────────────────────────────────
 const modes = [
-  { key: "R", label: "Root Intrusion" },
-  { key: "G", label: "Grease / FOG" },
-  { key: "D", label: "Debris / Wipes" },
+  { key: "B", label: "Blockage" },
   { key: "F", label: "Pipe Failure" },
-  { key: "P", label: "Pump Station Failure" },
+  { key: "P", label: "Pump Failure" },
+  { key: "H", label: "Hydraulic Overload" },
+  { key: "O", label: "Operational Failure" },
 ];
 
 const levers = [
@@ -57,52 +59,179 @@ const levers = [
   { key: "I4", label: "Risk-Based Targeting",   short: "Targeting" },
 ];
 
-const defaultLambda0 = { R: 2.6, G: 0.4, D: 0.2, F: 1.6, P: 0.6 };
+// λ₀ from Formulas_: lambda0 dict (failures per 100 miles/year, from slides)
+const DEFAULT_LAMBDA0 = { B:6.483, F:0.884, P:0.049, H:0.200, O:0.100 };
 
-const defaultAlpha = {
-  R: { I1: 0.035, I2: 0.010, I3: 0.012, I4: 0.025 },
-  G: { I1: 0.020, I2: 0.008, I3: 0.010, I4: 0.015 },
-  D: { I1: 0.015, I2: 0.005, I3: 0.008, I4: 0.010 },
-  F: { I1: 0.010, I2: 0.004, I3: 0.006, I4: 0.020 },
-  P: { I1: 0.000, I2: 0.012, I3: 0.014, I4: 0.003 },
+// α matrix from Formulas_: alpha_matrix dict, same order [I1,I2,I3,I4]
+const DEFAULT_ALPHA = {
+  B: { I1:0.040, I2:0.015, I3:0.010, I4:0.028 },
+  F: { I1:0.015, I2:0.004, I3:0.006, I4:0.020 },
+  P: { I1:0.000, I2:0.020, I3:0.022, I4:0.002 },
+  H: { I1:0.000, I2:0.003, I3:0.002, I4:0.015 },
+  O: { I1:0.000, I2:0.015, I3:0.032, I4:0.005 },
 };
 
-const defaultCost = { I1: 1, I2: 1, I3: 1, I4: 1 };
+const DEFAULT_COST = { I1:1, I2:1, I3:1, I4:1 };
 
-const defaultSeverity = {
-  R: { medianVolume: 350, sigma: 1.15, pSurface: 0.10 },
-  G: { medianVolume: 400, sigma: 1.20, pSurface: 0.12 },
-  D: { medianVolume: 300, sigma: 1.10, pSurface: 0.08 },
-  F: { medianVolume: 600, sigma: 1.25, pSurface: 0.18 },
-  P: { medianVolume: 900, sigma: 1.35, pSurface: 0.22 },
+// q matrix from Formulas_: q dict — P(category c | failure mode k), cats [1,2,3,4]
+const Q_MATRIX = {
+  B: [0.045, 0.352, 0.503, 0.101],
+  F: [0.083, 0.611, 0.000, 0.306],
+  P: [0.220, 0.353, 0.424, 0.003],
+  H: [0.300, 0.456, 0.243, 0.001],
+  O: [0.150, 0.425, 0.425, 0.000],
 };
 
-// CAWD risk aversion — fixed, board-elicited
-const GAMMA = 0.091;
-const RHO   = 1 / GAMMA; // ≈ 10.989 ($100K units)
+// historical_gallons from Formulas_ — used in sample_gallons_for_category()
+const HIST_GALLONS = {
+  B: [1205,2460,2830,3295,2815,825,200,2960,980,1835,200,2450,5880,3765,6488,14471,1590,2447,708,2849,7891,7556,1777,20],
+  F: [250,400,50,150,145000,17,180,2008,361,48269,357,44159,3,3,22681,9156,1798,25,9429],
+  O: [60],
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CAWD COST MODEL — returns cost in $100K units
+// RISK PARAMETERS — from Formulas_
+// RHO = 10_000_000 dollars (Formulas_ default)
+// GAMMA = 0.091 (board-elicited, 1/GAMMA ≈ $10.99M ≈ $10M)
 // ─────────────────────────────────────────────────────────────────────────────
-function spillCost(volume, reachesSurface) {
-  let raw;
-  if (reachesSurface) {
-    raw = (volume >= 200 ? 100000 : 50000) + 10 * volume;
-  } else if (volume > 1000) {
-    raw = 100000 + 5 * volume;
-  } else if (volume >= 50) {
-    raw = 50000 + 3 * volume;
-  } else {
-    raw = 10000;
-  }
-  return raw / 100000; // $100K units
+const GAMMA       = 0.091;
+const RHO_DOLLARS = 10_000_000; // matching Formulas_ RHO exactly
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COST MODEL — exact match to Formulas_ spill_cost(category, gallons)
+// ─────────────────────────────────────────────────────────────────────────────
+function spillCost(category, gallons) {
+  if (category === 1) { const om = gallons < 200 ? 50000 : 100000; return om + 10 * gallons; }
+  if (category === 2) return 100000 + 5 * gallons;
+  if (category === 3) return 50000  + 3 * gallons;
+  if (category === 4) return 10000;
+  return 10000;
 }
 
-function classifySpill(volume, reachesSurface) {
-  if (reachesSurface) return "C1";
-  if (volume > 1000)  return "C2";
-  if (volume >= 50)   return "C3";
-  return "C4";
+// ─────────────────────────────────────────────────────────────────────────────
+// VOLUME SAMPLING — exact match to Formulas_ sample_gallons_for_category()
+// ─────────────────────────────────────────────────────────────────────────────
+function sampleGallons(category, modeKey) {
+  const data = HIST_GALLONS[modeKey];
+  if (data) {
+    let candidates;
+    if      (category === 1) candidates = data.filter(g => g > 0);
+    else if (category === 2) candidates = data.filter(g => g > 1000);
+    else if (category === 3) candidates = data.filter(g => g >= 50 && g <= 1000);
+    else                     candidates = data.filter(g => g < 50);
+    if (candidates.length > 0) return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+  // log-uniform fallback matching Formulas_
+  if (category === 1) return Math.exp(Math.random() * (Math.log(150000) - Math.log(50))   + Math.log(50));
+  if (category === 2) return Math.exp(Math.random() * (Math.log(50000)  - Math.log(1000)) + Math.log(1000));
+  if (category === 3) return Math.exp(Math.random() * (Math.log(1000)   - Math.log(50))   + Math.log(50));
+  return 1 + Math.random() * 49;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILITY — matches Formulas_ expected_utility():
+//   U(-C) = 1 - exp(C / rho)   ← NOTE: 1 minus, not negative
+//   x clipped at 50 to avoid overflow
+// ─────────────────────────────────────────────────────────────────────────────
+function expUtility(costDollars) {
+  const x = Math.min(costDollars / RHO_DOLLARS, 50);
+  return 1 - Math.exp(x);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CAUSE → FAILURE MODE mapping for spreadsheet upload
+// Mirrors how the Python assigns modes from the CAWD cause field
+// ─────────────────────────────────────────────────────────────────────────────
+function causeToMode(causeStr) {
+  const c = (causeStr || "").toLowerCase();
+  if (c.includes("pump"))                                                   return "P";
+  if (c.includes("hydraulic") || c.includes("i&i") || c.includes("inflow")) return "H";
+  if (["broken","break","pipe","liner","sag","fitting","dip","damage","crack"].some(k => c.includes(k))) return "F";
+  if (["jetting","operational","operator"].some(k => c.includes(k)))        return "O";
+  // everything else is Blockage (roots, grease, grit, rags, debris, FOG, unknown)
+  return "B";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SPREADSHEET CSV PARSER
+// Supports BOTH CAWD formats:
+//   Early  (2000–2012): DATE, SPILL LOCATION, GALLONS SPILLED, CAUSE
+//   Later  (2013+):     DATE, SPILL LOCATION, LINE SEGMENT, GALLONS SPILLED, GALLONS RECOVERED, CAUSE, ...
+// Format detected by checking whether col[2] looks like a line segment code (letters+digits)
+// ─────────────────────────────────────────────────────────────────────────────
+function isLineSegmentCol(val) {
+  // Line segment codes look like "M746-M747", "O770-O773", "R1137-R1138"
+  return /^[A-Z]\d+/i.test((val || "").trim());
+}
+
+function excelSerialToYear(serial) {
+  // Excel date serial → year
+  const d = new Date(Date.UTC(1899, 11, 30) + serial * 86400000);
+  return d.getUTCFullYear();
+}
+
+function parseCAWDCsv(text) {
+  // Split into non-empty lines
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const spills = [];
+  let currentYear = null;
+
+  for (const line of lines) {
+    // Skip header / title rows
+    if (/^(DATE|CAWD|YEAR|\s*$)/i.test(line)) continue;
+    if (/NO SPILLS/i.test(line)) continue;
+
+    const cols = line.split(/[,\t]/).map(c => c.trim().replace(/^"|"$/g, ""));
+    if (cols.length < 3) continue;
+
+    // Try to detect year from first col
+    const col0 = cols[0];
+    const asNum = parseFloat(col0);
+
+    // If it's a 4-digit year header row like "2013"
+    if (/^\d{4}$/.test(col0) && cols.length === 1) { currentYear = parseInt(col0); continue; }
+
+    // Determine format
+    let gallons, causeStr, year;
+    if (!isNaN(asNum) && asNum > 30000 && asNum < 50000) {
+      // Excel serial date
+      year = excelSerialToYear(Math.round(asNum));
+    } else if (/^\d{4}-\d{2}-\d{2}/.test(col0) || /^\d{1,2}\/\d{1,2}\/\d{4}/.test(col0)) {
+      year = parseInt(col0.replace(/-.*/, "").split("/").pop());
+    } else if (/^\d{4}$/.test(col0)) {
+      year = parseInt(col0);
+    } else {
+      year = currentYear;
+    }
+
+    if (!year || year < 1990 || year > 2100) continue;
+    currentYear = year;
+
+    // Detect format: does col[2] look like a line segment?
+    if (isLineSegmentCol(cols[2])) {
+      // Later format: DATE, LOCATION, LINE_SEG, GALLONS, RECOVERED, CAUSE, ...
+      gallons  = parseFloat(cols[3]);
+      causeStr = cols[5] || "";
+    } else {
+      // Early format: DATE, LOCATION, GALLONS, CAUSE
+      gallons  = parseFloat(cols[2]);
+      causeStr = cols[3] || "";
+    }
+
+    if (!isFinite(gallons) || gallons <= 0) continue;
+
+    spills.push({ year, gallons, mode: causeToMode(causeStr), cause: causeStr });
+  }
+
+  // Aggregate by year
+  const byYear = {};
+  for (const s of spills) {
+    if (!byYear[s.year]) byYear[s.year] = { year:s.year, count:0, totalGallons:0, spills:[] };
+    byYear[s.year].count++;
+    byYear[s.year].totalGallons += s.gallons;
+    byYear[s.year].spills.push({ gallons:s.gallons, mode:s.mode });
+  }
+  return Object.values(byYear).sort((a,b) => a.year - b.year);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -116,15 +245,11 @@ function poissonSample(lambda) {
   return count - 1;
 }
 
-function normalSample() {
-  let u = 0, v = 0;
-  while (u === 0) u = Math.random();
-  while (v === 0) v = Math.random();
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-}
-
-function lognormalSample(median, sigma) {
-  return Math.exp(Math.log(Math.max(1, median)) + Math.max(0.05, sigma) * normalSample());
+function weightedChoice(weights) {
+  const total = weights.reduce((a,b) => a+b, 0);
+  let r = Math.random() * total, cum = 0;
+  for (let i = 0; i < weights.length; i++) { cum += weights[i]; if (r <= cum) return i; }
+  return weights.length - 1;
 }
 
 function poissonCdf(k, lambda) {
@@ -137,539 +262,548 @@ function poissonCdf(k, lambda) {
 function computeLambdas(lambda0, alpha, investment) {
   const result = {};
   for (const m of modes) {
-    let reduction = 0;
-    for (const l of levers) reduction += (alpha[m.key]?.[l.key] || 0) * (investment[l.key] || 0);
-    result[m.key] = (lambda0[m.key] || 0) * Math.exp(-reduction);
+    let r = 0;
+    for (const l of levers) r += (alpha[m.key]?.[l.key]||0) * (investment[l.key]||0);
+    result[m.key] = (lambda0[m.key]||0) * Math.exp(-r);
   }
   return result;
 }
 
-function sumValues(obj) {
-  return Object.values(obj).reduce((a, b) => a + Number(b || 0), 0);
-}
+function sumValues(obj) { return Object.values(obj).reduce((a,b) => a+Number(b||0), 0); }
 
-function fmt(x, d = 2) {
+function fmt(x, d=2) {
   if (!Number.isFinite(x)) return "—";
-  return x.toLocaleString(undefined, { maximumFractionDigits: d, minimumFractionDigits: d });
+  return x.toLocaleString(undefined, { maximumFractionDigits:d, minimumFractionDigits:d });
 }
 
-function fmtDollars(x100k) {
-  // x100k is in $100K units — convert to readable dollars
-  const dollars = x100k * 100000;
-  if (dollars >= 1000000) return `$${fmt(dollars/1000000, 2)}M`;
-  if (dollars >= 1000)    return `$${fmt(dollars/1000, 0)}k`;
-  return `$${fmt(dollars, 0)}`;
-}
-
-function expUtility(costIn100k) {
-  return -Math.exp(costIn100k / RHO);
+function fmtDollars(dollars) {
+  if (!Number.isFinite(dollars)) return "—";
+  if (dollars >= 1e6) return `$${fmt(dollars/1e6,2)}M`;
+  if (dollars >= 1000) return `$${fmt(dollars/1000,0)}k`;
+  return `$${fmt(dollars,0)}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SIMULATE ONE YEAR
+// SIMULATE ONE YEAR — mirrors Formulas_ simulate_annual_costs() inner loop
 // ─────────────────────────────────────────────────────────────────────────────
-function simulateYear(lambdas, severity) {
-  let n = 0, totalCost = 0, yearVolume = 0, yearCat1 = 0, yearCat2 = 0;
+function simulateYear(lambdas) {
+  let n = 0, totalCost = 0;
   for (const m of modes) {
-    const count = poissonSample(lambdas[m.key] || 0);
+    const count = poissonSample(lambdas[m.key]||0);
     n += count;
     for (let j = 0; j < count; j++) {
-      const sev = severity[m.key];
-      const volume = lognormalSample(sev.medianVolume, sev.sigma);
-      const toSurface = Math.random() < Math.max(0, Math.min(1, sev.pSurface));
-      totalCost += spillCost(volume, toSurface);
-      yearVolume += volume;
-      const cat = classifySpill(volume, toSurface);
-      if (cat === "C1") yearCat1++;
-      if (cat === "C2") yearCat2++;
+      const catIdx  = weightedChoice(Q_MATRIX[m.key]); // matches rng.choice([1,2,3,4], p=probs)
+      const category = catIdx + 1;
+      const gallons  = sampleGallons(category, m.key);
+      totalCost += spillCost(category, gallons);
     }
   }
-  return { n, totalCost, yearCat1, yearCat2, yearVolume };
+  return { n, totalCost };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MONTE CARLO ENGINE
+// MONTE CARLO — mirrors Formulas_ simulate_annual_costs() outer loop
 // ─────────────────────────────────────────────────────────────────────────────
-function monteCarlo(lambdas, severity, runs, threshold) {
+function monteCarlo(lambdas, runs, threshold) {
   const HIST_MAX = 15;
-  const hist = Array.from({ length: HIST_MAX + 1 }, (_, i) => ({
-    spills: i < HIST_MAX ? String(i) : `${HIST_MAX}+`, count: 0,
+  const hist = Array.from({length:HIST_MAX+1}, (_,i) => ({
+    spills: i<HIST_MAX ? String(i) : `${HIST_MAX}+`, count:0,
   }));
-  const catTotals = { C1: 0, C2: 0, C3: 0, C4: 0 };
-  const modeVolArr = Object.fromEntries(modes.map((m) => [m.key, []]));
-  let totalSpills = 0, totalVolume = 0, totalCost = 0, totalUtility = 0;
-  let cntAtLeastOne = 0, cntOverThreshold = 0, cntCat1Year = 0;
-  let cntCat2PlusYear = 0, cntVolOver10k = 0, cntCostOver1M = 0;
+  const catCounts = [0,0,0,0];
+  let totalSpills=0, totalCost=0, totalUtility=0;
+  let cntAtLeastOne=0, cntOverThreshold=0, cntCostOver1M=0;
   const annualCosts = [];
 
   for (let r = 0; r < runs; r++) {
-    let n = 0, yearCost = 0, yearVolume = 0, yearCat1 = 0, yearCat2 = 0;
+    let n=0, yearCost=0;
     for (const m of modes) {
-      const count = poissonSample(lambdas[m.key] || 0);
+      const count = poissonSample(lambdas[m.key]||0);
       n += count;
       for (let j = 0; j < count; j++) {
-        const sev = severity[m.key];
-        const volume = lognormalSample(sev.medianVolume, sev.sigma);
-        const toSurface = Math.random() < Math.max(0, Math.min(1, sev.pSurface));
-        const cat = classifySpill(volume, toSurface);
-        yearCost += spillCost(volume, toSurface);
-        yearVolume += volume;
-        catTotals[cat]++;
-        modeVolArr[m.key].push(volume);
-        if (cat === "C1") yearCat1++;
-        if (cat === "C2") yearCat2++;
+        const catIdx  = weightedChoice(Q_MATRIX[m.key]);
+        const category = catIdx + 1;
+        const gallons  = sampleGallons(category, m.key);
+        yearCost += spillCost(category, gallons);
+        catCounts[catIdx]++;
       }
     }
-    totalSpills += n; totalVolume += yearVolume; totalCost += yearCost;
-    totalUtility += expUtility(yearCost);
+    totalSpills  += n;
+    totalCost    += yearCost;
+    totalUtility += expUtility(yearCost); // U(-C) = 1 - exp(C/rho)
     annualCosts.push(yearCost);
     hist[Math.min(n, HIST_MAX)].count++;
-    if (n >= 1) cntAtLeastOne++;
-    if (n > threshold) cntOverThreshold++;
-    if (yearCat1 >= 1) cntCat1Year++;
-    if (yearCat1 + yearCat2 >= 1) cntCat2PlusYear++;
-    if (yearVolume > 10000) cntVolOver10k++;
-    if (yearCost > 10) cntCostOver1M++; // 10 = $1M in $100K units
+    if (n >= 1)             cntAtLeastOne++;
+    if (n > threshold)      cntOverThreshold++;
+    if (yearCost > 1000000) cntCostOver1M++;
   }
 
   function pct(arr, p) {
-    if (!arr.length) return 0;
-    const s = [...arr].sort((a, b) => a - b);
-    return s[Math.max(0, Math.ceil(s.length * p) - 1)];
+    const s = [...arr].sort((a,b)=>a-b);
+    return s[Math.max(0,Math.ceil(s.length*p)-1)]||0;
   }
 
-  const modeVolumeStats = Object.fromEntries(modes.map((m) => {
-    const arr = modeVolArr[m.key];
-    return [m.key, {
-      p25: pct(arr,0.25), median: pct(arr,0.50), p75: pct(arr,0.75), p90: pct(arr,0.90),
-      mean: arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0,
-    }];
-  }));
-
   return {
-    mean: totalSpills/runs,
-    expectedVolume: totalVolume/runs,
-    expectedCost: totalCost/runs,          // $100K units
-    expectedUtility: totalUtility/runs,
-    pAtLeastOne: cntAtLeastOne/runs,
-    pOverThreshold: cntOverThreshold/runs,
-    pAtLeastOneCat1: cntCat1Year/runs,
-    pAtLeastOneCat2P: cntCat2PlusYear/runs,
-    pVolOver10k: cntVolOver10k/runs,
-    pCostOver1M: cntCostOver1M/runs,
-    p90Cost: pct(annualCosts, 0.90),
-    p95Cost: pct(annualCosts, 0.95),
-    hist: hist.map((d) => ({ ...d, probability: d.count/runs })),
+    mean:            totalSpills  / runs,
+    expectedCost:    totalCost    / runs,
+    expectedUtility: totalUtility / runs,  // matches Formulas_ summarize()["expected_utility"]
+    pAtLeastOne:     cntAtLeastOne    / runs,
+    pOverThreshold:  cntOverThreshold / runs,
+    pCostOver1M:     cntCostOver1M    / runs,
+    p90Cost:         pct(annualCosts, 0.90),
+    p95Cost:         pct(annualCosts, 0.95),
+    hist:            hist.map(d=>({...d, probability:d.count/runs})),
     catMeans: [
-      { category: "Cat 1", key: "C1", count: catTotals.C1/runs },
-      { category: "Cat 2", key: "C2", count: catTotals.C2/runs },
-      { category: "Cat 3", key: "C3", count: catTotals.C3/runs },
-      { category: "Cat 4", key: "C4", count: catTotals.C4/runs },
+      {category:"Cat 1", count:catCounts[0]/runs},
+      {category:"Cat 2", count:catCounts[1]/runs},
+      {category:"Cat 3", count:catCounts[2]/runs},
+      {category:"Cat 4", count:catCounts[3]/runs},
     ],
-    modeVolumeStats,
   };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// RISK-AVERSE GREEDY OPTIMIZER
+// GREEDY OPTIMIZER — maximizes E[U(-C)] = E[1 - exp(C/rho)]
+// matching Formulas_ objective_value() / optimize_allocation logic
 // ─────────────────────────────────────────────────────────────────────────────
 const MC_OPT_RUNS = 400;
 
-function expectedUtilityFor(lambda0, alpha, inv, severity, runs) {
+function euFor(lambda0, alpha, inv, runs) {
   const lambdas = computeLambdas(lambda0, alpha, inv);
   let sumU = 0;
-  for (let r = 0; r < runs; r++) {
-    const { totalCost } = simulateYear(lambdas, severity);
-    sumU += expUtility(totalCost);
-  }
+  for (let r = 0; r < runs; r++) { const {totalCost} = simulateYear(lambdas); sumU += expUtility(totalCost); }
   return sumU / runs;
 }
 
-function greedyOptimize(lambda0, alpha, costs, budget, severity, step = 0.25) {
-  const inv = { I1: 0, I2: 0, I3: 0, I4: 0 };
+function greedyOptimize(lambda0, alpha, costs, budget, step=0.25) {
+  const inv = {I1:0,I2:0,I3:0,I4:0};
   let remaining = budget;
-  let currentEU = expectedUtilityFor(lambda0, alpha, inv, severity, MC_OPT_RUNS);
-  const path = [{ step: 0, eu: currentEU, lambda: sumValues(computeLambdas(lambda0, alpha, inv)), ...inv }];
+  let currentEU = euFor(lambda0, alpha, inv, MC_OPT_RUNS);
+  const path = [{step:0, eu:currentEU, lambda:sumValues(computeLambdas(lambda0,alpha,inv)), ...inv}];
   let t = 0;
   while (remaining >= step && t < 1000) {
-    let bestLever = null, bestEU = -Infinity;
+    let bestLever=null, bestEU=-Infinity;
     for (const lever of levers) {
-      const cost = costs[lever.key] || 1;
-      if (cost * step > remaining) continue;
-      const trial = { ...inv, [lever.key]: inv[lever.key] + step };
-      const trialEU = expectedUtilityFor(lambda0, alpha, trial, severity, MC_OPT_RUNS);
-      if (trialEU > bestEU) { bestEU = trialEU; bestLever = lever.key; }
+      const cost = costs[lever.key]||1;
+      if (cost*step > remaining) continue;
+      const trial = {...inv, [lever.key]:inv[lever.key]+step};
+      const trialEU = euFor(lambda0, alpha, trial, MC_OPT_RUNS);
+      if (trialEU > bestEU) { bestEU=trialEU; bestLever=lever.key; }
     }
     if (!bestLever || bestEU <= currentEU) break;
     inv[bestLever] += step;
-    remaining -= (costs[bestLever] || 1) * step;
-    currentEU = bestEU;
-    t++;
-    path.push({ step: t, eu: currentEU, lambda: sumValues(computeLambdas(lambda0, alpha, inv)), ...inv });
+    remaining -= (costs[bestLever]||1)*step;
+    currentEU = bestEU; t++;
+    path.push({step:t, eu:currentEU, lambda:sumValues(computeLambdas(lambda0,alpha,inv)), ...inv});
   }
-  return { investment: inv, remaining, path, finalEU: currentEU };
+  return {investment:inv, remaining, path, finalEU:currentEU};
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HISTORICAL ANALYTICS HELPERS
+// HISTORICAL ANALYTICS
+// λ₀ = (observed events in window) / years × (100 / SYSTEM_MILES)
+// mirrors slide formula: λ_B0 = 132/26.25 × 100/77.57 = 6.48
 // ─────────────────────────────────────────────────────────────────────────────
-function getWindowData(years) {
-  return HISTORICAL_DATA.filter(d => years.includes(d.year));
+function computeLambda0FromWindow(data) {
+  const valid = data.filter(d => d.year !== 2020); // exclude zero-spill year from rate
+  const years = valid.length || 1;
+  const mc = {B:0,F:0,P:0,H:0,O:0};
+  valid.forEach(yr => yr.spills.forEach(s => { if (mc[s.mode]!==undefined) mc[s.mode]++; else mc.B++; }));
+  const result = {};
+  for (const m of modes) result[m.key] = (mc[m.key]/years) * (100/SYSTEM_MILES);
+  return result;
 }
 
 function historicalStats(data) {
-  const validYears = data.filter(d => d.count >= 0);
-  const avgSpills = validYears.length ? validYears.reduce((s,d) => s+d.count, 0) / validYears.length : 0;
-  const avgGallons = validYears.length ? validYears.reduce((s,d) => s+d.totalGallons, 0) / validYears.length : 0;
-  const modeCounts = { R:0, G:0, D:0, F:0, P:0 };
-  validYears.forEach(yr => yr.spills.forEach(sp => { modeCounts[sp.mode] = (modeCounts[sp.mode]||0)+1; }));
-  const totalSpills = validYears.reduce((s,d)=>s+d.count,0);
-  return { avgSpills, avgGallons, modeCounts, totalSpills, years: validYears.length };
+  const valid = data.filter(d => d.count >= 0);
+  const avgSpills  = valid.length ? valid.reduce((s,d)=>s+d.count,0)/valid.length : 0;
+  const avgGallons = valid.length ? valid.reduce((s,d)=>s+d.totalGallons,0)/valid.length : 0;
+  const totalSpills = valid.reduce((s,d)=>s+d.count,0);
+  const mc = {B:0,F:0,P:0,H:0,O:0};
+  valid.forEach(yr => yr.spills.forEach(s => { if(mc[s.mode]!==undefined) mc[s.mode]++; }));
+  return {avgSpills, avgGallons, totalSpills, modeCounts:mc, years:valid.length};
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SHARED UI COMPONENTS
+// UI COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────
-const CAT_COLORS = { "Cat 1": "#ef4444", "Cat 2": "#f97316", "Cat 3": "#22c55e", "Cat 4": "#38bdf8" };
-const MODE_COLORS = { R: "#38bdf8", G: "#facc15", D: "#a78bfa", F: "#f97316", P: "#34d399" };
-const MODE_LABELS = { R: "Root Intrusion", G: "Grease/FOG", D: "Debris/Wipes", F: "Pipe Failure", P: "Pump Failure" };
+const CAT_COLORS  = {"Cat 1":"#ef4444","Cat 2":"#f97316","Cat 3":"#22c55e","Cat 4":"#38bdf8"};
+const MODE_COLORS = {B:"#38bdf8",F:"#f97316",P:"#34d399",H:"#a78bfa",O:"#facc15"};
 
-function Kpi({ title, value, subtitle, accent }) {
+function Kpi({title,value,subtitle,accent}) {
   return (
-    <div style={{ borderRadius:16, border:"1px solid #1e293b", background:"linear-gradient(135deg,#0f172a 60%,#1e293b)", padding:"18px 20px", boxShadow:"0 2px 12px #0008", borderLeft: accent?`3px solid ${accent}`:undefined }}>
-      <div style={{ fontSize:11, color:"#94a3b8", letterSpacing:"0.06em", textTransform:"uppercase" }}>{title}</div>
-      <div style={{ fontSize:24, fontWeight:800, color:"#f1f5f9", margin:"6px 0 4px", fontFamily:"'DM Mono',monospace" }}>{value}</div>
-      <div style={{ fontSize:11, color:"#64748b" }}>{subtitle}</div>
+    <div style={{borderRadius:14,border:"1px solid #1e293b",background:"linear-gradient(135deg,#0f172a 60%,#1e293b)",padding:"14px 16px",boxShadow:"0 2px 12px #0008",borderLeft:accent?`3px solid ${accent}`:undefined}}>
+      <div style={{fontSize:10,color:"#94a3b8",letterSpacing:"0.06em",textTransform:"uppercase"}}>{title}</div>
+      <div style={{fontSize:21,fontWeight:800,color:"#f1f5f9",margin:"5px 0 3px",fontFamily:"'DM Mono',monospace"}}>{value}</div>
+      <div style={{fontSize:10,color:"#64748b"}}>{subtitle}</div>
     </div>
   );
 }
-
-function Panel({ title, children, style }) {
+function Panel({title,children,style}) {
   return (
-    <div style={{ borderRadius:16, border:"1px solid #1e293b", background:"#0f172a", padding:20, boxShadow:"0 2px 12px #0008", ...style }}>
-      <h2 style={{ margin:"0 0 14px", fontSize:15, fontWeight:700, color:"#e2e8f0" }}>{title}</h2>
+    <div style={{borderRadius:14,border:"1px solid #1e293b",background:"#0f172a",padding:16,boxShadow:"0 2px 12px #0008",...style}}>
+      <h2 style={{margin:"0 0 12px",fontSize:13,fontWeight:700,color:"#e2e8f0"}}>{title}</h2>
       {children}
     </div>
   );
 }
-
-function ChartCard({ title, children }) {
+function ChartCard({title,children}) {
   return (
-    <div style={{ borderRadius:16, border:"1px solid #1e293b", background:"#0f172a", padding:20, boxShadow:"0 2px 12px #0008" }}>
-      <h2 style={{ margin:"0 0 14px", fontSize:15, fontWeight:700, color:"#e2e8f0" }}>{title}</h2>
+    <div style={{borderRadius:14,border:"1px solid #1e293b",background:"#0f172a",padding:16,boxShadow:"0 2px 12px #0008"}}>
+      <h2 style={{margin:"0 0 12px",fontSize:13,fontWeight:700,color:"#e2e8f0"}}>{title}</h2>
       {children}
     </div>
   );
 }
-
-function NumberInput({ label, value, onChange, step = 0.1 }) {
+function NInput({label,value,onChange,step=0.1}) {
   return (
-    <label style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, fontSize:13, color:"#cbd5e1" }}>
+    <label style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,fontSize:12,color:"#cbd5e1"}}>
       <span>{label}</span>
-      <input type="number" step={step} value={value} onChange={(e)=>onChange(Number(e.target.value))}
-        style={{ width:110, borderRadius:10, border:"1px solid #334155", background:"#020617", padding:"6px 10px", textAlign:"right", color:"#f1f5f9", fontSize:13 }} />
+      <input type="number" step={step} value={value} onChange={e=>onChange(Number(e.target.value))}
+        style={{width:96,borderRadius:7,border:"1px solid #334155",background:"#020617",padding:"4px 7px",textAlign:"right",color:"#f1f5f9",fontSize:12}}/>
     </label>
   );
 }
-
-const TAB_ON  = { borderRadius:10, padding:"7px 16px", fontSize:12, fontWeight:700, background:"#f1f5f9", color:"#0f172a", border:"none", cursor:"pointer" };
-const TAB_OFF = { borderRadius:10, padding:"7px 16px", fontSize:12, fontWeight:600, background:"#1e293b", color:"#94a3b8", border:"none", cursor:"pointer" };
+const TON  = {borderRadius:9,padding:"5px 13px",fontSize:11,fontWeight:700,background:"#f1f5f9",color:"#0f172a",border:"none",cursor:"pointer"};
+const TOFF = {borderRadius:9,padding:"5px 13px",fontSize:11,fontWeight:600,background:"#1e293b",color:"#94a3b8",border:"none",cursor:"pointer"};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN APP
 // ─────────────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [lambda0,    setLambda0]    = useState(defaultLambda0);
-  const [alpha,      setAlpha]      = useState(defaultAlpha);
-  const [costs,      setCosts]      = useState(defaultCost);
-  const [severity,   setSeverity]   = useState(defaultSeverity);
-  const [investment, setInvestment] = useState({ I1:1.5, I2:1.0, I3:1.0, I4:1.5 });
-  const [runs,       setRuns]       = useState(5000);
-  const [budget,     setBudget]     = useState(5.5);
-  const [thresholdN, setThresholdN] = useState(5);
-  const [tab,        setTab]        = useState("dashboard");
-  const [histView,   setHistView]   = useState("all");   // all | 10yr | 5yr
-  const [rerun,      setRerun]      = useState(0);
+  const [alpha,       setAlpha]      = useState(DEFAULT_ALPHA);
+  const [costs,       setCosts]      = useState(DEFAULT_COST);
+  const [investment,  setInvestment] = useState({I1:1.5,I2:1.0,I3:1.0,I4:1.5});
+  const [runs,        setRuns]       = useState(5000);
+  const [budget,      setBudget]     = useState(5.5);
+  const [thresholdN,  setThresholdN] = useState(5);
+  const [tab,         setTab]        = useState("dashboard");
+  const [baseline,    setBaseline]   = useState("historical"); // "5yr"|"10yr"|"historical"|"manual"
+  const [manualL0,    setManualL0]   = useState(DEFAULT_LAMBDA0);
+  const [histView,    setHistView]   = useState("historical");
+  const [rerun,       setRerun]      = useState(0);
 
-  const threshold      = Math.max(0, Math.round(thresholdN));
-  const baselineLambda = useMemo(() => sumValues(lambda0), [lambda0]);
-  const scenarioLambdas = useMemo(() => computeLambdas(lambda0, alpha, investment), [lambda0, alpha, investment]);
+  // Data tab state
+  const [liveDataset, setLiveDataset] = useState(null); // uploaded dataset merges here
+  const [uploadMsg,   setUploadMsg]   = useState("");
+  const [uploadOk,    setUploadOk]    = useState(false);
+  const fileRef = useRef(null);
+
+  // Active dataset = uploaded if present, else embedded
+  const activeDataset = liveDataset || HISTORICAL_DATA;
+
+  // Baseline window filter
+  const baselineData = useMemo(() => {
+    if (baseline === "5yr")  return activeDataset.filter(d => d.year >= CURRENT_YEAR-4);
+    if (baseline === "10yr") return activeDataset.filter(d => d.year >= CURRENT_YEAR-9);
+    if (baseline === "manual") return [];
+    return activeDataset; // historical = all
+  }, [baseline, activeDataset]);
+
+  // λ₀ auto-computed or manual
+  const lambda0 = useMemo(() => {
+    if (baseline === "manual") return manualL0;
+    if (baselineData.length === 0) return DEFAULT_LAMBDA0;
+    return computeLambda0FromWindow(baselineData);
+  }, [baseline, baselineData, manualL0]);
+
+  const baselineLambda  = useMemo(() => sumValues(lambda0), [lambda0]);
+  const scenarioLambdas = useMemo(() => computeLambdas(lambda0, alpha, investment), [lambda0,alpha,investment]);
   const scenarioLambda  = useMemo(() => sumValues(scenarioLambdas), [scenarioLambdas]);
+  const threshold       = Math.max(0, Math.round(thresholdN));
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const mc = useMemo(() => monteCarlo(scenarioLambdas, severity, Math.max(100, runs), threshold),
-    [scenarioLambdas, severity, runs, threshold, rerun]);
+  const mc = useMemo(() => monteCarlo(scenarioLambdas, Math.max(100,runs), threshold),
+    [scenarioLambdas, runs, threshold, rerun]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const optimized = useMemo(() => greedyOptimize(lambda0, alpha, costs, budget, severity),
-    [lambda0, alpha, costs, budget, severity, rerun]);
+  const mcBase = useMemo(() => monteCarlo(computeLambdas(lambda0,alpha,{I1:0,I2:0,I3:0,I4:0}), Math.max(100,runs), threshold),
+    [lambda0, alpha, runs, threshold, rerun]);
 
-  const optLambdas = useMemo(() => computeLambdas(lambda0, alpha, optimized.investment), [lambda0, alpha, optimized.investment]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const optimized = useMemo(() => greedyOptimize(lambda0, alpha, costs, budget),
+    [lambda0, alpha, costs, budget, rerun]);
+
+  const optLambdas = useMemo(() => computeLambdas(lambda0, alpha, optimized.investment), [lambda0,alpha,optimized.investment]);
   const optLambda  = sumValues(optLambdas);
+  const pGTn       = 1 - poissonCdf(threshold, scenarioLambda);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const mcBaseline = useMemo(() => monteCarlo(computeLambdas(lambda0, alpha, {I1:0,I2:0,I3:0,I4:0}), severity, Math.max(100,runs), threshold),
-    [lambda0, alpha, severity, runs, threshold, rerun]);
+  // Historical view window (separate from baseline)
+  const histDataForView = useMemo(() => {
+    if (histView === "5yr")  return activeDataset.filter(d => d.year >= CURRENT_YEAR-4);
+    if (histView === "10yr") return activeDataset.filter(d => d.year >= CURRENT_YEAR-9);
+    return activeDataset;
+  }, [histView, activeDataset]);
 
-  const pSpillScenario = 1 - Math.exp(-scenarioLambda);
-  const pSpillBase     = 1 - Math.exp(-baselineLambda);
-  const pGTn_exact     = 1 - poissonCdf(threshold, scenarioLambda);
-
-  // Historical window
-  const histYears = useMemo(() => {
-    if (histView === "5yr")  return Array.from({length:5},  (_,i) => CURRENT_YEAR - i).filter(y => y >= 2000);
-    if (histView === "10yr") return Array.from({length:10}, (_,i) => CURRENT_YEAR - i).filter(y => y >= 2000);
-    return HISTORICAL_DATA.map(d => d.year);
-  }, [histView]);
-
-  const histData    = useMemo(() => getWindowData(histYears), [histYears]);
-  const histSummary = useMemo(() => historicalStats(histData), [histData]);
+  const histSummary = useMemo(() => historicalStats(histDataForView), [histDataForView]);
 
   // Chart data
-  const modeChart = modes.map((m) => ({
-    mode: m.key, name: m.label,
-    baseline: +lambda0[m.key].toFixed(3),
-    scenario: +scenarioLambdas[m.key].toFixed(3),
-    optimized: +optLambdas[m.key].toFixed(3),
-  }));
-  const investChart = levers.map((l) => ({
-    lever: l.short, scenario: investment[l.key], optimized: optimized.investment[l.key],
-  }));
+  const modeChart   = modes.map(m=>({mode:m.key,name:m.label,baseline:+lambda0[m.key].toFixed(3),scenario:+scenarioLambdas[m.key].toFixed(3),optimized:+optLambdas[m.key].toFixed(3)}));
+  const investChart = levers.map(l=>({lever:l.short,scenario:investment[l.key],optimized:optimized.investment[l.key]}));
+  const histChart   = histDataForView.map(d=>({year:d.year,count:d.count,gallons:d.totalGallons}));
+  const histModeChart = modes.map(m=>({mode:m.key,label:m.label,count:histSummary.modeCounts[m.key]||0}));
 
-  // Historical trend chart
-  const histTrendChart = histData.map(d => ({
-    year: d.year, count: d.count,
-    gallons: Math.round(d.totalGallons),
-    lambda: +scenarioLambda.toFixed(2),
-  }));
+  const baselineLabel = {
+    "5yr":"Last 5 yrs (Board)","10yr":"Last 10 yrs","historical":"Full history (2000–2026)","manual":"Manual"
+  }[baseline];
 
-  // Mode breakdown from historical
-  const histModeChart = modes.map(m => ({
-    mode: m.key,
-    label: m.label,
-    count: histSummary.modeCounts[m.key] || 0,
-  }));
+  // ── CSV upload handler ───────────────────────────────────────────────────
+  function handleUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadMsg(""); setUploadOk(false);
+    if (!file.name.toLowerCase().endsWith(".csv")) {
+      setUploadMsg("Please upload a .csv file. Export your CAWD spreadsheet as CSV first."); return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const parsed = parseCAWDCsv(ev.target.result);
+        if (!parsed.length) { setUploadMsg("No valid spill rows found. Check the format guide below."); return; }
+        setLiveDataset(parsed);
+        setUploadOk(true);
+        setUploadMsg(`✓ Loaded ${parsed.length} year(s) · ${parsed.reduce((s,d)=>s+d.count,0)} spills · ${parsed.reduce((s,d)=>s+d.totalGallons,0).toLocaleString()} gallons`);
+      } catch(err) { setUploadMsg("Parse error: " + err.message); }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
 
-  const tabs = ["dashboard","historical","cost","volume","severity","inputs","optimizer","model"];
+  const tabs = ["dashboard","historical","data","cost","optimizer","inputs","model"];
 
   return (
-    <div style={{ minHeight:"100vh", background:"#020617", padding:"20px 16px", color:"#e2e8f0", fontFamily:"'IBM Plex Sans',system-ui,sans-serif" }}>
-      <div style={{ maxWidth:1200, margin:"0 auto" }}>
+    <div style={{minHeight:"100vh",background:"#020617",padding:"16px 12px",color:"#e2e8f0",fontFamily:"'IBM Plex Sans',system-ui,sans-serif"}}>
+      <div style={{maxWidth:1200,margin:"0 auto"}}>
 
-        {/* Header */}
-        <div style={{ marginBottom:20 }}>
-          <div style={{ display:"flex", flexWrap:"wrap", alignItems:"flex-start", justifyContent:"space-between", gap:12 }}>
+        {/* ── Header ── */}
+        <div style={{marginBottom:14}}>
+          <div style={{display:"flex",flexWrap:"wrap",alignItems:"flex-start",justifyContent:"space-between",gap:10}}>
             <div>
-              <h1 style={{ margin:0, fontSize:24, fontWeight:800, color:"#f8fafc", letterSpacing:"-0.02em", lineHeight:1.2 }}>
+              <h1 style={{margin:0,fontSize:21,fontWeight:800,color:"#f8fafc",letterSpacing:"-0.02em"}}>
                 CAWD Sewer Spill O&M Risk Dashboard
               </h1>
-              <p style={{ margin:"4px 0 0", fontSize:12, color:"#64748b", maxWidth:600 }}>
-                Monte Carlo PRA + investment simulator · SAM model · risk-averse: max E[U(−C)] · Historical data 2000–2026
+              <p style={{margin:"3px 0 0",fontSize:11,color:"#64748b"}}>
+                Monte Carlo PRA · SAM model · U(−C)=1−e<sup>C/ρ</sup> · λ₀ window: <strong style={{color:"#7dd3fc"}}>{baselineLabel}</strong>
+                {liveDataset && <span style={{color:"#22c55e",marginLeft:8}}>· uploaded dataset active</span>}
               </p>
-              <span style={{ display:"inline-block", marginTop:5, borderRadius:20, background:"#1e3a5f", padding:"2px 10px", fontSize:10, fontWeight:700, color:"#7dd3fc", letterSpacing:"0.06em" }}>
-                Stanford MS&E 250B · Spring 2026 · Annabelle Jayadinata· Khang Do · Ramesh Manian· Maura Osorio
+              <span style={{display:"inline-block",marginTop:3,borderRadius:20,background:"#1e3a5f",padding:"2px 10px",fontSize:10,fontWeight:700,color:"#7dd3fc"}}>
+                Stanford MS&E 250B · Spring 2026 · Annabelle · Khang · Ramesh · Maura Osorio
               </span>
             </div>
-            <button onClick={() => setRerun(x=>x+1)}
-              style={{ borderRadius:12, background:"#f1f5f9", padding:"9px 18px", fontWeight:700, fontSize:12, color:"#0f172a", border:"none", cursor:"pointer", whiteSpace:"nowrap" }}>
-              ↺ Re-run Monte Carlo
+            <button onClick={()=>setRerun(x=>x+1)}
+              style={{borderRadius:11,background:"#f1f5f9",padding:"7px 15px",fontWeight:700,fontSize:12,color:"#0f172a",border:"none",cursor:"pointer"}}>
+              ↺ Re-run MC
             </button>
           </div>
 
-          {/* Risk aversion badge */}
-          <div style={{ marginTop:12, background:"#0f172a", borderRadius:12, border:"1px solid #1e293b", padding:"10px 16px", display:"flex", flexWrap:"wrap", gap:20, alignItems:"center" }}>
-            <div>
-              <div style={{ fontSize:10, color:"#94a3b8", textTransform:"uppercase", letterSpacing:"0.06em" }}>Risk Aversion γ</div>
-              <div style={{ fontSize:18, fontWeight:800, color:"#a78bfa", fontFamily:"'DM Mono',monospace" }}>0.091</div>
+          {/* Baseline window + risk badge */}
+          <div style={{marginTop:10,background:"#0f172a",borderRadius:11,border:"1px solid #1e293b",padding:"10px 14px",display:"flex",flexWrap:"wrap",gap:14,alignItems:"center",justifyContent:"space-between"}}>
+            <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
+              <span style={{fontSize:11,color:"#94a3b8",marginRight:3}}>Baseline λ₀:</span>
+              {[["5yr","Last 5 yrs (Board)"],["10yr","Last 10 yrs"],["historical","Full history"],["manual","Manual"]].map(([k,label])=>(
+                <button key={k} onClick={()=>setBaseline(k)}
+                  style={baseline===k ? {...TON,background:"#38bdf8",color:"#0f172a"} : TOFF}>
+                  {label}
+                </button>
+              ))}
             </div>
-            <div>
-              <div style={{ fontSize:10, color:"#94a3b8", textTransform:"uppercase", letterSpacing:"0.06em" }}>Risk Tolerance ρ = 1/γ</div>
-              <div style={{ fontSize:18, fontWeight:800, color:"#facc15", fontFamily:"'DM Mono',monospace" }}>{RHO.toFixed(4)} ($100K) ≈ ${(RHO/10).toFixed(2)}M</div>
+            <div style={{display:"flex",gap:14,alignItems:"center"}}>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:9,color:"#94a3b8",textTransform:"uppercase",letterSpacing:"0.06em"}}>γ</div>
+                <div style={{fontSize:14,fontWeight:800,color:"#a78bfa",fontFamily:"'DM Mono',monospace"}}>{GAMMA}</div>
+              </div>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:9,color:"#94a3b8",textTransform:"uppercase",letterSpacing:"0.06em"}}>ρ (Formulas_)</div>
+                <div style={{fontSize:14,fontWeight:800,color:"#facc15",fontFamily:"'DM Mono',monospace"}}>${fmt(RHO_DOLLARS/1e6,0)}M</div>
+              </div>
+              <div style={{fontSize:10,color:"#475569",maxWidth:180}}>All model outputs update when window changes</div>
             </div>
-            <div style={{ fontSize:11, color:"#475569" }}>U(−C) = −e<sup>C/ρ</sup> · board-elicited · fixed across all scenarios</div>
+          </div>
+
+          {/* Live λ₀ strip */}
+          <div style={{marginTop:7,background:"#0f172a",borderRadius:9,border:"1px solid #1e293b",padding:"7px 12px",display:"flex",flexWrap:"wrap",gap:10,alignItems:"center"}}>
+            <span style={{fontSize:10,color:"#64748b"}}>Active λ₀:</span>
+            {modes.map(m=>(
+              <div key={m.key} style={{textAlign:"center"}}>
+                <div style={{fontSize:9,color:MODE_COLORS[m.key]}}>{m.label.split(" ")[0]}</div>
+                <div style={{fontSize:12,fontWeight:700,color:"#f1f5f9",fontFamily:"'DM Mono',monospace"}}>{fmt(lambda0[m.key],3)}</div>
+              </div>
+            ))}
+            <div style={{textAlign:"center",marginLeft:4}}>
+              <div style={{fontSize:9,color:"#94a3b8"}}>Σλ</div>
+              <div style={{fontSize:12,fontWeight:700,color:"#22c55e",fontFamily:"'DM Mono',monospace"}}>{fmt(baselineLambda,3)}</div>
+            </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:18 }}>
-          {tabs.map(t => (
-            <button key={t} onClick={() => setTab(t)} style={tab===t ? TAB_ON : TAB_OFF}>
+        <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:14}}>
+          {tabs.map(t=>(
+            <button key={t} onClick={()=>setTab(t)} style={tab===t?TON:TOFF}>
               {t[0].toUpperCase()+t.slice(1)}
             </button>
           ))}
         </div>
 
         {/* ══ DASHBOARD ══════════════════════════════════════════════════════ */}
-        {tab === "dashboard" && (
-          <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(175px,1fr))", gap:12 }}>
-              <Kpi title="Expected annual spills" value={fmt(scenarioLambda)} subtitle={`Baseline: ${fmt(baselineLambda)}`} accent="#38bdf8" />
-              <Kpi title="Expected annual cost" value={fmtDollars(mc.expectedCost)} subtitle={`Baseline: ${fmtDollars(mcBaseline.expectedCost)}`} accent="#f97316" />
-              <Kpi title="P(≥1 spill)" value={`${fmt(100*pSpillScenario,1)}%`} subtitle={`Baseline: ${fmt(100*pSpillBase,1)}%`} accent="#22c55e" />
-              <Kpi title={`P(N>${threshold}) exact`} value={`${fmt(100*pGTn_exact,1)}%`} subtitle={`MC: ${fmt(100*mc.pOverThreshold,1)}%`} accent="#a78bfa" />
-              <Kpi title="Expected utility E[U]" value={fmt(mc.expectedUtility,4)} subtitle={`γ=0.091, ρ≈${RHO.toFixed(2)}`} accent="#facc15" />
+        {tab==="dashboard" && (
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10}}>
+              <Kpi title="Expected annual spills" value={fmt(scenarioLambda)} subtitle={`λ₀ baseline: ${fmt(baselineLambda)}`} accent="#38bdf8"/>
+              <Kpi title="Expected annual cost" value={fmtDollars(mc.expectedCost)} subtitle={`No invest: ${fmtDollars(mcBase.expectedCost)}`} accent="#f97316"/>
+              <Kpi title="P(≥1 spill)" value={`${fmt(100*(1-Math.exp(-scenarioLambda)),1)}%`} subtitle={`No invest: ${fmt(100*(1-Math.exp(-baselineLambda)),1)}%`} accent="#22c55e"/>
+              <Kpi title={`P(N>${threshold}) Poisson`} value={`${fmt(100*pGTn,1)}%`} subtitle={`MC: ${fmt(100*mc.pOverThreshold,1)}%`} accent="#a78bfa"/>
+              <Kpi title="E[U(−C)]" value={fmt(mc.expectedUtility,4)} subtitle={`No invest: ${fmt(mcBase.expectedUtility,4)}`} accent="#facc15"/>
             </div>
 
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18 }}>
-              <ChartCard title="Failure Mode λ: Baseline vs Scenario">
-                <ResponsiveContainer width="100%" height={260}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+              <ChartCard title="Failure Mode λ — Baseline vs Scenario">
+                <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={modeChart}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                    <XAxis dataKey="mode" stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} />
-                    <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} />
-                    <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}} />
-                    <Legend wrapperStyle={{fontSize:12}} />
-                    <Bar dataKey="baseline" name="Baseline λ" fill="#475569" radius={[4,4,0,0]} />
-                    <Bar dataKey="scenario" name="Scenario λ" fill="#38bdf8" radius={[4,4,0,0]} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                    <XAxis dataKey="mode" stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                    <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                    <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}/>
+                    <Legend wrapperStyle={{fontSize:11}}/>
+                    <Bar dataKey="baseline" name="Baseline λ₀" fill="#475569" radius={[3,3,0,0]}/>
+                    <Bar dataKey="scenario" name="Scenario λ"  fill="#38bdf8" radius={[3,3,0,0]}/>
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
 
-              <ChartCard title="MC Distribution of Annual Spill Count">
-                <ResponsiveContainer width="100%" height={260}>
+              <ChartCard title="MC Annual Spill Count Distribution">
+                <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={mc.hist}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                    <XAxis dataKey="spills" stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} />
-                    <YAxis tickFormatter={v=>`${(v*100).toFixed(0)}%`} stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} />
-                    <Tooltip formatter={v=>`${fmt(100*v,2)}%`} contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}} />
-                    <Bar dataKey="probability" name="Probability" fill="#22c55e" radius={[4,4,0,0]} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                    <XAxis dataKey="spills" stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                    <YAxis tickFormatter={v=>`${(v*100).toFixed(0)}%`} stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                    <Tooltip formatter={v=>`${fmt(100*v,2)}%`} contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}/>
+                    <Bar dataKey="probability" name="Probability" fill="#22c55e" radius={[3,3,0,0]}/>
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
             </div>
 
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18 }}>
-              <ChartCard title="Expected Annual Spills by Category">
-                <ResponsiveContainer width="100%" height={220}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+              <ChartCard title="Expected Spills by Category — q matrix (MC)">
+                <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={mc.catMeans}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                    <XAxis dataKey="category" stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} />
-                    <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} />
-                    <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}} />
-                    <Bar dataKey="count" name="Spills/yr" radius={[4,4,0,0]}>
-                      {mc.catMeans.map(e=><Cell key={e.category} fill={CAT_COLORS[e.category]||"#94a3b8"} />)}
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                    <XAxis dataKey="category" stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                    <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                    <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}/>
+                    <Bar dataKey="count" name="Spills/yr" radius={[3,3,0,0]}>
+                      {mc.catMeans.map(e=><Cell key={e.category} fill={CAT_COLORS[e.category]||"#94a3b8"}/>)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
-                <p style={{margin:"8px 0 0",fontSize:11,color:"#475569"}}>Cat 1: surface water · Cat 2: no SW &gt;1000 gal · Cat 3: 50–1000 gal · Cat 4: &lt;50 gal</p>
+                <p style={{margin:"5px 0 0",fontSize:10,color:"#475569"}}>Category probabilities from q matrix (Formulas_). Cat 1–4 per mode, not volume threshold.</p>
               </ChartCard>
 
-              <Panel title="Investment Scenario Sliders">
-                <div style={{marginBottom:10}}>
-                  <NumberInput label={`Threshold n for P(N>n)`} value={thresholdN} step={1} onChange={v=>setThresholdN(Math.max(0,Math.round(v)))} />
-                </div>
-                <div style={{display:"flex",flexDirection:"column",gap:12}}>
-                  {levers.map(l => (
+              <Panel title="Investment Sliders">
+                <NInput label={`P(N>${threshold}) threshold n`} value={thresholdN} step={1} onChange={v=>setThresholdN(Math.max(0,Math.round(v)))}/>
+                <div style={{display:"flex",flexDirection:"column",gap:9,marginTop:10}}>
+                  {levers.map(l=>(
                     <div key={l.key}>
-                      <div style={{display:"flex",justifyContent:"space-between",fontSize:13,color:"#94a3b8",marginBottom:3}}>
+                      <div style={{display:"flex",justifyContent:"space-between",fontSize:12,color:"#94a3b8",marginBottom:2}}>
                         <span>{l.label}</span>
                         <span style={{fontFamily:"'DM Mono',monospace",color:"#f1f5f9"}}>{fmt(investment[l.key])}</span>
                       </div>
                       <input type="range" min="0" max="10" step="0.25" value={investment[l.key]}
                         onChange={e=>setInvestment({...investment,[l.key]:Number(e.target.value)})}
-                        style={{width:"100%",accentColor:"#38bdf8"}} />
+                        style={{width:"100%",accentColor:"#38bdf8"}}/>
                     </div>
                   ))}
                 </div>
-                <p style={{margin:"8px 0 0",fontSize:11,color:"#475569"}}>1 unit ≈ $100K O&M effort.</p>
+                <p style={{margin:"6px 0 0",fontSize:10,color:"#475569"}}>1 unit ≈ $100K O&M effort (BUDGET_UNITS=10 = $1M)</p>
               </Panel>
             </div>
           </div>
         )}
 
-        {/* ══ HISTORICAL TAB ═════════════════════════════════════════════════ */}
-        {tab === "historical" && (
-          <div style={{display:"flex",flexDirection:"column",gap:18}}>
-            {/* Window selector */}
-            <div style={{display:"flex",gap:8,alignItems:"center"}}>
-              <span style={{fontSize:13,color:"#94a3b8",marginRight:4}}>View window:</span>
-              {[["all","All years (2000–2026)"],["10yr","Last 10 years"],["5yr","Last 5 years (Board view)"]].map(([k,label])=>(
+        {/* ══ HISTORICAL ═════════════════════════════════════════════════════ */}
+        {tab==="historical" && (
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
+              <span style={{fontSize:11,color:"#94a3b8"}}>View:</span>
+              {[["historical","All years"],["10yr","Last 10 yrs"],["5yr","Last 5 yrs (Board)"]].map(([k,label])=>(
                 <button key={k} onClick={()=>setHistView(k)}
-                  style={histView===k ? {...TAB_ON,fontSize:12} : {...TAB_OFF,fontSize:12}}>
-                  {label}
-                </button>
+                  style={histView===k?{...TON,background:"#38bdf8",color:"#0f172a"}:TOFF}>{label}</button>
               ))}
             </div>
 
-            {/* Summary KPIs */}
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(165px,1fr))",gap:12}}>
-              <Kpi title="Avg spills/year" value={fmt(histSummary.avgSpills,1)} subtitle={`Over ${histSummary.years} years`} accent="#38bdf8" />
-              <Kpi title="Total spills" value={histSummary.totalSpills} subtitle={`${histYears[0]}–${histYears[histYears.length-1]}`} accent="#f97316" />
-              <Kpi title="Avg volume/year" value={`${fmt(histSummary.avgGallons/1000,1)}k gal`} subtitle="Mean annual gallons spilled" accent="#facc15" />
-              <Kpi title="Model λ (scenario)" value={fmt(scenarioLambda,2)} subtitle="Expected spills/yr from PRA" accent="#22c55e" />
-              <Kpi title="Model vs observed" value={`${fmt(100*(scenarioLambda-histSummary.avgSpills)/Math.max(0.01,histSummary.avgSpills),1)}%`} subtitle="Model over/under vs history" accent="#a78bfa" />
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(155px,1fr))",gap:10}}>
+              <Kpi title="Avg spills/year" value={fmt(histSummary.avgSpills,1)} subtitle={`${histSummary.years} years`} accent="#38bdf8"/>
+              <Kpi title="Total spills" value={histSummary.totalSpills} subtitle={`${histDataForView[0]?.year}–${histDataForView[histDataForView.length-1]?.year}`} accent="#f97316"/>
+              <Kpi title="Avg volume/year" value={`${fmt(histSummary.avgGallons/1000,1)}k gal`} subtitle="Mean annual" accent="#facc15"/>
+              <Kpi title="Model λ (scenario)" value={fmt(scenarioLambda,2)} subtitle={`λ₀ from: ${baselineLabel.split("(")[0].trim()}`} accent="#22c55e"/>
+              <Kpi title="Model vs observed" value={`${scenarioLambda>histSummary.avgSpills?"+":""}${fmt(100*(scenarioLambda-histSummary.avgSpills)/Math.max(0.01,histSummary.avgSpills),1)}%`} subtitle="Δ vs historical avg" accent="#a78bfa"/>
             </div>
 
-            {/* Trend chart */}
-            <ChartCard title={`Annual Spill Count — ${histView==="5yr"?"Last 5 Years":histView==="10yr"?"Last 10 Years":"Full History (2000–2026)"}`}>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={histTrendChart}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                  <XAxis dataKey="year" stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}} />
-                  <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} />
-                  <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}} />
-                  <Legend wrapperStyle={{fontSize:12}} />
-                  <Bar dataKey="count" name="Observed spills" fill="#38bdf8" radius={[3,3,0,0]} />
-                  <ReferenceLine y={histSummary.avgSpills} stroke="#facc15" strokeDasharray="4 4" label={{value:`Avg ${fmt(histSummary.avgSpills,1)}`,fill:"#facc15",fontSize:11}} />
-                  <ReferenceLine y={scenarioLambda} stroke="#22c55e" strokeDasharray="4 4" label={{value:`Model λ ${fmt(scenarioLambda,1)}`,fill:"#22c55e",fontSize:11}} />
+            <ChartCard title="Annual Spill Count">
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={histChart}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                  <XAxis dataKey="year" stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}}/>
+                  <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                  <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}/>
+                  <Bar dataKey="count" name="Observed spills" fill="#38bdf8" radius={[3,3,0,0]}/>
+                  <ReferenceLine y={histSummary.avgSpills} stroke="#facc15" strokeDasharray="4 4" label={{value:`Avg ${fmt(histSummary.avgSpills,1)}`,fill:"#facc15",fontSize:10,position:"insideTopRight"}}/>
+                  <ReferenceLine y={scenarioLambda} stroke="#22c55e" strokeDasharray="4 4" label={{value:`λ ${fmt(scenarioLambda,1)}`,fill:"#22c55e",fontSize:10,position:"insideBottomRight"}}/>
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
 
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
-              {/* Volume trend */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
               <ChartCard title="Annual Gallons Spilled">
-                <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={histTrendChart}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                    <XAxis dataKey="year" stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}} />
-                    <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} tickFormatter={v=>v>=1000?`${(v/1000).toFixed(0)}k`:v} />
-                    <Tooltip formatter={v=>`${fmt(v,0)} gal`} contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}} />
-                    <Bar dataKey="gallons" name="Gallons spilled" fill="#f97316" radius={[3,3,0,0]} />
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart data={histChart}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                    <XAxis dataKey="year" stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}}/>
+                    <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}} tickFormatter={v=>v>=1000?`${(v/1000).toFixed(0)}k`:v}/>
+                    <Tooltip formatter={v=>`${fmt(v,0)} gal`} contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}/>
+                    <Bar dataKey="gallons" name="Gallons" fill="#f97316" radius={[3,3,0,0]}/>
                   </BarChart>
                 </ResponsiveContainer>
-                <p style={{margin:"6px 0 0",fontSize:11,color:"#475569"}}>Note: 2017 spike = 145k gal Hatton Canyon pipe damage. 2023 spike = multiple pipe failures.</p>
+                <p style={{margin:"5px 0 0",fontSize:10,color:"#475569"}}>2017 = 145k gal Hatton Canyon pipe. 2023 = multiple pipe failures.</p>
               </ChartCard>
 
-              {/* Mode breakdown */}
-              <ChartCard title={`Spill Count by Failure Mode (${histView==="5yr"?"5yr":histView==="10yr"?"10yr":"All"})`}>
-                <ResponsiveContainer width="100%" height={240}>
+              <ChartCard title="Spills by Failure Mode">
+                <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={histModeChart}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                    <XAxis dataKey="mode" stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} />
-                    <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} />
-                    <Tooltip formatter={(v,_,p)=>[v, MODE_LABELS[p.payload.mode]||p.name]} contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}} />
-                    <Bar dataKey="count" name="Spills" radius={[4,4,0,0]}>
-                      {histModeChart.map(e=><Cell key={e.mode} fill={MODE_COLORS[e.mode]||"#94a3b8"} />)}
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                    <XAxis dataKey="mode" stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                    <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                    <Tooltip formatter={(v,_,p)=>[v,p.payload.label||""]} contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}/>
+                    <Bar dataKey="count" name="Spills" radius={[3,3,0,0]}>
+                      {histModeChart.map(e=><Cell key={e.mode} fill={MODE_COLORS[e.mode]||"#94a3b8"}/>)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
             </div>
 
-            {/* Raw table */}
-            <Panel title="Year-by-Year Spill Record">
+            <Panel title="Year-by-Year Record">
               <div style={{overflowX:"auto"}}>
-                <table style={{width:"100%",fontSize:12,borderCollapse:"collapse"}}>
+                <table style={{width:"100%",fontSize:11,borderCollapse:"collapse"}}>
                   <thead>
                     <tr style={{borderBottom:"1px solid #1e293b"}}>
-                      {["Year","Spills","Total Gallons","Root","Grease","Debris","Pipe Fail","Pump"].map(h=>(
-                        <th key={h} style={{padding:"6px 10px",textAlign:"left",color:"#64748b",fontWeight:600,fontSize:11}}>{h}</th>
+                      {["Year","Spills","Gallons","Blockage","Pipe Fail","Pump","Hydraulic","Operational"].map(h=>(
+                        <th key={h} style={{padding:"5px 7px",textAlign:"left",color:"#64748b",fontWeight:600,fontSize:10}}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {histData.map(d=>{
-                      const mc_ = {R:0,G:0,D:0,F:0,P:0};
-                      d.spills.forEach(s=>{ mc_[s.mode]=(mc_[s.mode]||0)+1; });
-                      const isRecent = d.year >= CURRENT_YEAR - 4;
+                    {histDataForView.map(d=>{
+                      const mc_={B:0,F:0,P:0,H:0,O:0};
+                      d.spills.forEach(s=>{if(mc_[s.mode]!==undefined)mc_[s.mode]++;});
+                      const isRecent = d.year >= CURRENT_YEAR-4;
                       return (
                         <tr key={d.year} style={{borderBottom:"1px solid #0f172a",background:isRecent?"#0f1f3d":undefined}}>
-                          <td style={{padding:"5px 10px",fontWeight:700,color:isRecent?"#7dd3fc":"#e2e8f0"}}>{d.year}{isRecent?" ★":""}</td>
-                          <td style={{padding:"5px 10px",fontFamily:"'DM Mono',monospace"}}>{d.count}</td>
-                          <td style={{padding:"5px 10px",fontFamily:"'DM Mono',monospace"}}>{d.totalGallons.toLocaleString()}</td>
-                          {["R","G","D","F","P"].map(m=>(
-                            <td key={m} style={{padding:"5px 10px",fontFamily:"'DM Mono',monospace",color:mc_[m]>0?MODE_COLORS[m]:"#475569"}}>{mc_[m]||"—"}</td>
+                          <td style={{padding:"4px 7px",fontWeight:700,color:isRecent?"#7dd3fc":"#e2e8f0"}}>{d.year}{isRecent?" ★":""}</td>
+                          <td style={{padding:"4px 7px",fontFamily:"'DM Mono',monospace"}}>{d.count}</td>
+                          <td style={{padding:"4px 7px",fontFamily:"'DM Mono',monospace"}}>{d.totalGallons.toLocaleString()}</td>
+                          {["B","F","P","H","O"].map(m=>(
+                            <td key={m} style={{padding:"4px 7px",fontFamily:"'DM Mono',monospace",color:mc_[m]>0?MODE_COLORS[m]:"#334155"}}>{mc_[m]||"—"}</td>
                           ))}
                         </tr>
                       );
@@ -677,216 +811,207 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
-              <p style={{margin:"10px 0 0",fontSize:11,color:"#475569"}}>★ = last 5 years (Board view window). 2020 = zero spills recorded.</p>
+              <p style={{margin:"7px 0 0",fontSize:10,color:"#475569"}}>★ = last 5 years (Board view). 2020 = zero spills.</p>
             </Panel>
           </div>
         )}
 
-        {/* ══ COST TAB ═══════════════════════════════════════════════════════ */}
-        {tab === "cost" && (
-          <div style={{display:"flex",flexDirection:"column",gap:18}}>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(175px,1fr))",gap:12}}>
-              <Kpi title="Expected annual cost" value={fmtDollars(mc.expectedCost)} subtitle={`Baseline: ${fmtDollars(mcBaseline.expectedCost)}`} accent="#f97316" />
-              <Kpi title="P90 annual cost" value={fmtDollars(mc.p90Cost)} subtitle="90th percentile year" accent="#ef4444" />
-              <Kpi title="P95 annual cost" value={fmtDollars(mc.p95Cost)} subtitle="95th percentile year" accent="#ef4444" />
-              <Kpi title="P(cost > $1M)" value={`${fmt(100*mc.pCostOver1M,1)}%`} subtitle={`Baseline: ${fmt(100*mcBaseline.pCostOver1M,1)}%`} accent="#a78bfa" />
-              <Kpi title="Expected utility E[U]" value={fmt(mc.expectedUtility,4)} subtitle={`γ=0.091, ρ≈${RHO.toFixed(2)}`} accent="#facc15" />
-            </div>
+        {/* ══ DATA UPLOAD ════════════════════════════════════════════════════ */}
+        {tab==="data" && (
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            <Panel title="Upload Updated CAWD Spill Data">
+              <p style={{margin:"0 0 12px",fontSize:12,color:"#94a3b8",lineHeight:1.7}}>
+                Export your CAWD Sewage Spill Tracking spreadsheet as CSV and upload it here.
+                The parser handles <strong style={{color:"#7dd3fc"}}>both CAWD spreadsheet formats</strong> automatically —
+                the early format (2000–2012: DATE, LOCATION, GALLONS, CAUSE) and
+                the later format (2013+: DATE, LOCATION, LINE SEGMENT, GALLONS, RECOVERED, CAUSE, ...).
+                Once uploaded, the dataset replaces the embedded data across all tabs.
+              </p>
 
-            <Panel title="CAWD Cost Model Reference (slide 10)">
+              <div style={{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginBottom:10}}>
+                <button onClick={()=>fileRef.current?.click()}
+                  style={{borderRadius:9,background:"#1e3a5f",border:"1px solid #38bdf8",color:"#7dd3fc",padding:"8px 16px",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+                  📂 Upload CSV
+                </button>
+                <input ref={fileRef} type="file" accept=".csv" onChange={handleUpload} style={{display:"none"}}/>
+                {liveDataset && (
+                  <button onClick={()=>{setLiveDataset(null);setUploadMsg("");setUploadOk(false);}}
+                    style={{borderRadius:9,background:"#1e293b",border:"1px solid #ef4444",color:"#ef4444",padding:"8px 14px",fontSize:12,fontWeight:600,cursor:"pointer"}}>
+                    ✕ Clear upload
+                  </button>
+                )}
+              </div>
+              {uploadMsg && (
+                <div style={{padding:"8px 12px",borderRadius:8,background:uploadOk?"#0f2b1f":"#2b0f0f",border:`1px solid ${uploadOk?"#22c55e":"#ef4444"}`,fontSize:12,color:uploadOk?"#22c55e":"#ef4444",marginBottom:10}}>
+                  {uploadMsg}
+                </div>
+              )}
+
+              {/* Format guide */}
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginTop:4}}>
+                <div>
+                  <h3 style={{margin:"0 0 6px",fontSize:12,fontWeight:700,color:"#e2e8f0"}}>Early format (2000–2012)</h3>
+                  <pre style={{margin:0,background:"#020617",border:"1px solid #1e293b",borderRadius:7,padding:"8px 10px",fontSize:11,color:"#94a3b8",overflowX:"auto"}}>
+{`DATE,SPILL LOCATION,GALLONS SPILLED,CAUSE OF SPILL
+36565,Del Mar Easment,75,Roots
+36580,Lazarro & Mesa,800,
+36776,Carmel Meadows,50,Grit/Grease
+36826,High Meadows,500,Grit/Grease`}
+                  </pre>
+                  <p style={{margin:"5px 0 0",fontSize:10,color:"#475569"}}>DATE can be Excel serial (36565) or text date. CAUSE can be blank.</p>
+                </div>
+                <div>
+                  <h3 style={{margin:"0 0 6px",fontSize:12,fontWeight:700,color:"#e2e8f0"}}>Later format (2013+)</h3>
+                  <pre style={{margin:0,background:"#020617",border:"1px solid #1e293b",borderRadius:7,padding:"8px 10px",fontSize:11,color:"#94a3b8",overflowX:"auto"}}>
+{`DATE,SPILL LOCATION,LINE SEGMENT,GALLONS SPILLED,GALLONS RECOVERED,CAUSE OF SPILL,DURATION,GPM
+41278,3285 Camino Del Monte,M746-M747,700,0,Free flowing roots,47 Minutes,N/A
+41357,3 SW of 5th on Santa Rita,O770-O773,50,0,Roots,123 Minutes,N/A`}
+                  </pre>
+                  <p style={{margin:"5px 0 0",fontSize:10,color:"#475569"}}>Parser detects line segment column (e.g. M746-M747) and adjusts gallons column automatically.</p>
+                </div>
+              </div>
+
+              <div style={{marginTop:12,background:"#0f1f3d",borderRadius:8,border:"1px solid #1e3a5f",padding:"10px 12px"}}>
+                <h3 style={{margin:"0 0 6px",fontSize:12,fontWeight:700,color:"#7dd3fc"}}>Cause → Failure Mode mapping</h3>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:6,fontSize:11,color:"#94a3b8"}}>
+                  {[["Blockage (B)","Roots, Grease, Grit, Rags, FOG, Debris, or blank"],["Pipe Failure (F)","Broken, Break, Pipe, Liner, Sag, Fitting, Damage, Crack"],["Pump Failure (P)","Pump"],["Hydraulic Overload (H)","Hydraulic, I&I, Inflow"],["Operational (O)","Jetting, Operational, Operator"]].map(([mode,causes])=>(
+                    <div key={mode}><span style={{color:"#f1f5f9",fontWeight:600}}>{mode}:</span> {causes}</div>
+                  ))}
+                </div>
+              </div>
+            </Panel>
+
+            {liveDataset && (
+              <Panel title={`Uploaded Dataset Preview — ${liveDataset.length} years · ${liveDataset.reduce((s,d)=>s+d.count,0)} spills`}>
+                <div style={{overflowX:"auto"}}>
+                  <table style={{width:"100%",fontSize:11,borderCollapse:"collapse"}}>
+                    <thead>
+                      <tr style={{borderBottom:"1px solid #1e293b"}}>
+                        {["Year","Spills","Gallons","B","F","P","H","O"].map(h=>(
+                          <th key={h} style={{padding:"5px 8px",textAlign:"left",color:"#64748b",fontSize:10,fontWeight:600}}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {liveDataset.map(d=>{
+                        const mc_={B:0,F:0,P:0,H:0,O:0};
+                        d.spills.forEach(s=>{if(mc_[s.mode]!==undefined)mc_[s.mode]++;});
+                        return (
+                          <tr key={d.year} style={{borderBottom:"1px solid #0f172a"}}>
+                            <td style={{padding:"4px 8px",fontFamily:"'DM Mono',monospace",color:"#7dd3fc",fontWeight:700}}>{d.year}</td>
+                            <td style={{padding:"4px 8px",fontFamily:"'DM Mono',monospace"}}>{d.count}</td>
+                            <td style={{padding:"4px 8px",fontFamily:"'DM Mono',monospace"}}>{d.totalGallons.toLocaleString()}</td>
+                            {["B","F","P","H","O"].map(m=>(
+                              <td key={m} style={{padding:"4px 8px",fontFamily:"'DM Mono',monospace",color:mc_[m]>0?MODE_COLORS[m]:"#334155"}}>{mc_[m]||"—"}</td>
+                            ))}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </Panel>
+            )}
+
+            <Panel title="Embedded Dataset Summary (fallback when no upload)">
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10}}>
+                <Kpi title="Years" value="2000–2026" subtitle="27 years embedded" accent="#38bdf8"/>
+                <Kpi title="Total spills" value={HISTORICAL_DATA.reduce((s,d)=>s+d.count,0)} subtitle="From CAWD xlsx" accent="#f97316"/>
+                <Kpi title="Total gallons" value={`${fmt(HISTORICAL_DATA.reduce((s,d)=>s+d.totalGallons,0)/1000,0)}k`} subtitle="Cumulative" accent="#facc15"/>
+                <Kpi title="Zero-spill years" value="1 (2020)" subtitle="Excluded from λ₀ calc" accent="#22c55e"/>
+              </div>
+            </Panel>
+          </div>
+        )}
+
+        {/* ══ COST ═══════════════════════════════════════════════════════════ */}
+        {tab==="cost" && (
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10}}>
+              <Kpi title="Expected annual cost" value={fmtDollars(mc.expectedCost)} subtitle={`No invest: ${fmtDollars(mcBase.expectedCost)}`} accent="#f97316"/>
+              <Kpi title="P90 annual cost" value={fmtDollars(mc.p90Cost)} subtitle="90th pct year" accent="#ef4444"/>
+              <Kpi title="P95 annual cost" value={fmtDollars(mc.p95Cost)} subtitle="95th pct year" accent="#ef4444"/>
+              <Kpi title="P(cost > $1M)" value={`${fmt(100*mc.pCostOver1M,1)}%`} subtitle={`No invest: ${fmt(100*mcBase.pCostOver1M,1)}%`} accent="#a78bfa"/>
+              <Kpi title="E[U(−C)]" value={fmt(mc.expectedUtility,4)} subtitle={`ρ=$${fmt(RHO_DOLLARS/1e6,0)}M (Formulas_)`} accent="#facc15"/>
+            </div>
+            <Panel title="Cost Model — spill_cost(category, gallons) from Formulas_">
               <div style={{overflowX:"auto"}}>
-                <table style={{width:"100%",fontSize:13,borderCollapse:"collapse"}}>
+                <table style={{width:"100%",fontSize:12,borderCollapse:"collapse"}}>
                   <thead>
                     <tr style={{borderBottom:"1px solid #1e293b"}}>
-                      {["Cost Class","Condition","Fixed O&M","Per-gallon fine"].map(h=>(
-                        <th key={h} style={{padding:"7px 10px",textAlign:"left",color:"#64748b",fontWeight:600,fontSize:12}}>{h}</th>
+                      {["Category","Condition","O&M Fixed","Per-gallon","Python code"].map(h=>(
+                        <th key={h} style={{padding:"5px 8px",textAlign:"left",color:"#64748b",fontSize:11,fontWeight:600}}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {[
-                      ["Cat 1","≥200 gal, reaches surface water","$100,000","$10/gal"],
-                      ["Cat 1","<200 gal, reaches surface water","$50,000","$10/gal"],
-                      ["Cat 2",">1,000 gal, no surface water","$100,000","$5/gal"],
-                      ["Cat 3","50–1,000 gal, no surface water","$50,000","$3/gal"],
-                      ["Cat 4","<50 gal, no surface water","$10,000","$0"],
-                    ].map(([cat,cond,fixed,fine])=>(
+                      ["Cat 1","gal≥200, surface water","$100,000","$10/gal","om=100k if gal≥200 else 50k; +10×gal"],
+                      ["Cat 1","gal<200, surface water","$50,000","$10/gal",""],
+                      ["Cat 2",">1,000 gal, no SW","$100,000","$5/gal","100k+5×gal"],
+                      ["Cat 3","50–1,000 gal, no SW","$50,000","$3/gal","50k+3×gal"],
+                      ["Cat 4","<50 gal, no SW","$10,000","—","10k flat"],
+                    ].map(([cat,cond,fixed,fine,code])=>(
                       <tr key={cat+cond} style={{borderBottom:"1px solid #0f172a"}}>
-                        <td style={{padding:"7px 10px",fontWeight:700,color:CAT_COLORS[cat]||"#94a3b8"}}>{cat}</td>
-                        <td style={{padding:"7px 10px",color:"#cbd5e1"}}>{cond}</td>
-                        <td style={{padding:"7px 10px",fontFamily:"'DM Mono',monospace"}}>{fixed}</td>
-                        <td style={{padding:"7px 10px",fontFamily:"'DM Mono',monospace"}}>{fine}</td>
+                        <td style={{padding:"5px 8px",fontWeight:700,color:CAT_COLORS[cat]||"#94a3b8"}}>{cat}</td>
+                        <td style={{padding:"5px 8px",color:"#cbd5e1"}}>{cond}</td>
+                        <td style={{padding:"5px 8px",fontFamily:"'DM Mono',monospace"}}>{fixed}</td>
+                        <td style={{padding:"5px 8px",fontFamily:"'DM Mono',monospace"}}>{fine}</td>
+                        <td style={{padding:"5px 8px",fontFamily:"'DM Mono',monospace",fontSize:10,color:"#64748b"}}>{code}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             </Panel>
-
-            <Panel title="Utility Function & Risk Aversion">
-              <p style={{margin:"0 0 12px",fontSize:13,color:"#94a3b8",lineHeight:1.7}}>
-                U(−C) = −e<sup>C/ρ</sup> · γ = 0.091 (board-elicited) · ρ = 1/γ ≈ {RHO.toFixed(4)} ($100K) ≈ ${(RHO/10).toFixed(2)}M<br />
-                The optimizer maximizes E[U] across all investment allocations. Parameters are fixed — not a user lever.
+            <Panel title="Utility — expected_utility() from Formulas_">
+              <p style={{margin:"0 0 10px",fontSize:12,color:"#94a3b8",lineHeight:1.7}}>
+                <code style={{color:"#7dd3fc"}}>U(−C) = 1 − exp(C/ρ)</code> · ρ = ${fmt(RHO_DOLLARS/1e6,0)}M (Formulas_ default) ·
+                γ = {GAMMA} (board-elicited, 1/γ ≈ ${fmt(1/GAMMA/1e6,2)}M ≈ ρ).
+                x clipped at 50 to match Formulas_ overflow guard. Higher E[U] is better (closer to 1).
               </p>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                <Kpi title="Scenario E[U]"  value={fmt(mc.expectedUtility,4)}         subtitle="Current investment scenario" accent="#facc15" />
-                <Kpi title="Baseline E[U]"  value={fmt(mcBaseline.expectedUtility,4)} subtitle="Zero investment baseline"    accent="#475569" />
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <Kpi title="Scenario E[U]"      value={fmt(mc.expectedUtility,4)}      subtitle="Current investment" accent="#facc15"/>
+                <Kpi title="No-investment E[U]" value={fmt(mcBase.expectedUtility,4)}  subtitle="I=[0,0,0,0]"        accent="#475569"/>
               </div>
             </Panel>
           </div>
         )}
 
-        {/* ══ VOLUME TAB ═════════════════════════════════════════════════════ */}
-        {tab === "volume" && (
-          <div style={{display:"flex",flexDirection:"column",gap:18}}>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(175px,1fr))",gap:12}}>
-              <Kpi title="Expected annual volume" value={`${fmt(mc.expectedVolume,0)} gal`} subtitle="MC mean" accent="#facc15" />
-              <Kpi title="P(vol>10k gal/yr)" value={`${fmt(100*mc.pVolOver10k,1)}%`} subtitle="MC estimate" accent="#f97316" />
-              <Kpi title="P(≥1 Cat 1/yr)" value={`${fmt(100*mc.pAtLeastOneCat1,1)}%`} subtitle="Surface water impact" accent="#ef4444" />
-              <Kpi title="P(≥1 Cat 1 or 2/yr)" value={`${fmt(100*mc.pAtLeastOneCat2P,1)}%`} subtitle="Higher-severity year" accent="#f97316" />
-            </div>
-
-            <ChartCard title="Volume Percentiles by Failure Mode (per-spill, MC)">
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={modes.map(m=>({mode:m.key, p25:Math.round(mc.modeVolumeStats[m.key].p25), median:Math.round(mc.modeVolumeStats[m.key].median), p75:Math.round(mc.modeVolumeStats[m.key].p75), p90:Math.round(mc.modeVolumeStats[m.key].p90)}))}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                  <XAxis dataKey="mode" stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} />
-                  <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} label={{value:"Gallons",angle:-90,position:"insideLeft",fill:"#64748b",fontSize:11}} />
-                  <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}} />
-                  <Legend wrapperStyle={{fontSize:12}} />
-                  <Bar dataKey="p25" name="P25" fill="#1e3a5f" radius={[3,3,0,0]} />
-                  <Bar dataKey="median" name="Median" fill="#38bdf8" radius={[3,3,0,0]} />
-                  <Bar dataKey="p75" name="P75" fill="#f97316" radius={[3,3,0,0]} />
-                  <Bar dataKey="p90" name="P90" fill="#ef4444" radius={[3,3,0,0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartCard>
-          </div>
-        )}
-
-        {/* ══ SEVERITY TAB ═══════════════════════════════════════════════════ */}
-        {tab === "severity" && (
-          <Panel title="Severity & Volume Model Parameters">
-            <p style={{margin:"0 0 12px",fontSize:13,color:"#64748b"}}>
-              Volume ~ Lognormal(log(medianVolume), sigma). Surface water ~ Bernoulli(pSurface). pSurface should be calibrated with GIS data.
+        {/* ══ OPTIMIZER ══════════════════════════════════════════════════════ */}
+        {tab==="optimizer" && (
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            <p style={{margin:0,fontSize:12,color:"#64748b"}}>
+              Greedy optimizer maximizes E[U(−C)] matching Formulas_ objective_value(). ρ=${fmt(RHO_DOLLARS/1e6,0)}M. λ₀: <strong style={{color:"#7dd3fc"}}>{baselineLabel}</strong>.
             </p>
-            <div style={{overflowX:"auto"}}>
-              <table style={{width:"100%",fontSize:13,borderCollapse:"collapse"}}>
-                <thead>
-                  <tr style={{borderBottom:"1px solid #1e293b"}}>
-                    {["Failure Mode","Median Volume (gal)","Lognormal σ","P(Surface Water)"].map(h=>(
-                      <th key={h} style={{padding:"7px 10px",textAlign:"left",color:"#64748b",fontWeight:600,fontSize:12}}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {modes.map(m=>(
-                    <tr key={m.key} style={{borderBottom:"1px solid #0f172a"}}>
-                      <td style={{padding:"7px 10px",fontWeight:600,color:MODE_COLORS[m.key]}}>{m.label}</td>
-                      {[["medianVolume",10,1],["sigma",0.05,0.05],["pSurface",0.01,0]].map(([field,step,min])=>(
-                        <td key={field} style={{padding:"7px 10px"}}>
-                          <input type="number" step={step} value={severity[m.key][field]}
-                            onChange={e=>setSeverity({...severity,[m.key]:{...severity[m.key],[field]:Math.max(min,Number(e.target.value))}})}
-                            style={{width:100,borderRadius:8,border:"1px solid #334155",background:"#020617",padding:"5px 8px",color:"#f1f5f9",fontSize:13,textAlign:"right"}} />
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10}}>
+              <Kpi title="Optimized E[spills]" value={fmt(optLambda)} subtitle={`Baseline: ${fmt(baselineLambda)}`} accent="#22c55e"/>
+              <Kpi title="Reduction" value={`${fmt(100*(baselineLambda-optLambda)/Math.max(0.001,baselineLambda),1)}%`} subtitle={`${fmt(baselineLambda-optLambda)} fewer/yr`} accent="#38bdf8"/>
+              <Kpi title="Optimized E[U]" value={fmt(optimized.finalEU,4)} subtitle="Higher = better" accent="#facc15"/>
+              <Kpi title="Unallocated" value={`$${fmt(optimized.remaining*100,0)}K`} subtitle="After allocation" accent="#f97316"/>
             </div>
-          </Panel>
-        )}
-
-        {/* ══ INPUTS TAB ═════════════════════════════════════════════════════ */}
-        {tab === "inputs" && (
-          <div style={{display:"flex",flexDirection:"column",gap:18}}>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
-              <Panel title="Baseline Annual Failure Rates λ₀">
-                <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                  {modes.map(m=>(
-                    <NumberInput key={m.key} label={`${m.label} (${m.key})`} value={lambda0[m.key]}
-                      onChange={v=>setLambda0({...lambda0,[m.key]:Math.max(0,v)})} />
-                  ))}
-                </div>
-              </Panel>
-              <Panel title="Simulation & Cost Settings">
-                <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                  <NumberInput label="Monte Carlo runs" value={runs} step={1000} onChange={v=>setRuns(Math.max(100,Math.round(v)))} />
-                  <NumberInput label="Budget ($100K units)" value={budget} onChange={v=>setBudget(Math.max(0,v))} />
-                </div>
-                <h3 style={{margin:"18px 0 8px",fontSize:14,fontWeight:700,color:"#e2e8f0"}}>Cost per investment unit (ci)</h3>
-                <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                  {levers.map(l=>(
-                    <NumberInput key={l.key} label={l.label} value={costs[l.key]} onChange={v=>setCosts({...costs,[l.key]:Math.max(0.01,v)})} />
-                  ))}
-                </div>
-              </Panel>
-            </div>
-            <Panel title="Effectiveness Matrix αki">
-              <p style={{margin:"0 0 10px",fontSize:12,color:"#64748b"}}>λk(I) = λk0·exp(−Σi αki·Ii). P/I1=0 is intentional.</p>
-              <div style={{overflowX:"auto"}}>
-                <table style={{width:"100%",fontSize:13,borderCollapse:"collapse"}}>
-                  <thead>
-                    <tr style={{borderBottom:"1px solid #1e293b"}}>
-                      <th style={{padding:"7px 10px",textAlign:"left",color:"#64748b",fontSize:12}}>Mode</th>
-                      {levers.map(l=><th key={l.key} style={{padding:"7px 10px",textAlign:"left",color:"#64748b",fontSize:12}}>{l.short}</th>)}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {modes.map(m=>(
-                      <tr key={m.key} style={{borderBottom:"1px solid #0f172a"}}>
-                        <td style={{padding:"7px 10px",fontWeight:600,color:MODE_COLORS[m.key]}}>{m.label}</td>
-                        {levers.map(l=>(
-                          <td key={l.key} style={{padding:"7px 10px"}}>
-                            <input type="number" step="0.001" value={alpha[m.key][l.key]}
-                              onChange={e=>setAlpha({...alpha,[m.key]:{...alpha[m.key],[l.key]:Number(e.target.value)}})}
-                              style={{width:90,borderRadius:8,border:"1px solid #334155",background:"#020617",padding:"5px 8px",color:"#f1f5f9",fontSize:13,textAlign:"right"}} />
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Panel>
-          </div>
-        )}
-
-        {/* ══ OPTIMIZER TAB ══════════════════════════════════════════════════ */}
-        {tab === "optimizer" && (
-          <div style={{display:"flex",flexDirection:"column",gap:18}}>
-            <p style={{margin:0,fontSize:13,color:"#64748b"}}>
-              Greedy risk-averse optimizer: maximizes E[U(−C)] = E[−e<sup>C/ρ</sup>]. Fixed γ=0.091, ρ≈{RHO.toFixed(2)} ($100K).
-            </p>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(175px,1fr))",gap:12}}>
-              <Kpi title="Optimized E[spills]" value={fmt(optLambda)} subtitle={`Baseline: ${fmt(baselineLambda)}`} accent="#22c55e" />
-              <Kpi title="Spill reduction" value={`${fmt(100*(baselineLambda-optLambda)/baselineLambda,1)}%`} subtitle={`${fmt(baselineLambda-optLambda)} fewer/yr`} accent="#38bdf8" />
-              <Kpi title="Optimized E[U]" value={fmt(optimized.finalEU,4)} subtitle={`γ=0.091`} accent="#facc15" />
-              <Kpi title="Unallocated budget" value={`$${fmt(optimized.remaining*100,0)}K`} subtitle="After greedy allocation" accent="#f97316" />
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
               <ChartCard title="Manual vs Optimized Allocation">
-                <ResponsiveContainer width="100%" height={260}>
+                <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={investChart}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                    <XAxis dataKey="lever" stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} />
-                    <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} />
-                    <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}} />
-                    <Legend wrapperStyle={{fontSize:12}} />
-                    <Bar dataKey="scenario"  name="Manual"    fill="#38bdf8" radius={[4,4,0,0]} />
-                    <Bar dataKey="optimized" name="Optimized" fill="#f97316" radius={[4,4,0,0]} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                    <XAxis dataKey="lever" stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                    <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                    <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}/>
+                    <Legend wrapperStyle={{fontSize:11}}/>
+                    <Bar dataKey="scenario"  name="Manual"    fill="#38bdf8" radius={[3,3,0,0]}/>
+                    <Bar dataKey="optimized" name="Optimized" fill="#f97316" radius={[3,3,0,0]}/>
                   </BarChart>
                 </ResponsiveContainer>
               </ChartCard>
-              <ChartCard title="E[U] as Budget is Allocated">
-                <ResponsiveContainer width="100%" height={260}>
+              <ChartCard title="E[U] as Budget Allocated">
+                <ResponsiveContainer width="100%" height={240}>
                   <LineChart data={optimized.path}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                    <XAxis dataKey="step" stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} />
-                    <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:12}} />
-                    <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}} />
-                    <Line type="monotone" dataKey="eu" name="E[U]" stroke="#facc15" strokeWidth={2.5} dot={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                    <XAxis dataKey="step" stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                    <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                    <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}/>
+                    <Line type="monotone" dataKey="eu" name="E[U]" stroke="#facc15" strokeWidth={2} dot={false}/>
                   </LineChart>
                 </ResponsiveContainer>
               </ChartCard>
@@ -894,31 +1019,120 @@ export default function App() {
           </div>
         )}
 
-        {/* ══ MODEL TAB ══════════════════════════════════════════════════════ */}
-        {tab === "model" && (
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
-            <Panel title="PRA & Investment Equations">
-              <div style={{display:"flex",flexDirection:"column",gap:10,fontSize:13,color:"#cbd5e1",lineHeight:1.8}}>
-                <p style={{margin:0}}><strong>Failure count:</strong> N<sub>k</sub> ~ Poisson(λ<sub>k</sub>)</p>
-                <p style={{margin:0}}><strong>Total spills:</strong> N = Σ<sub>k</sub> N<sub>k</sub></p>
-                <p style={{margin:0}}><strong>Investment effect:</strong> λ<sub>k</sub>(I) = λ<sub>k0</sub>·exp(−Σ<sub>i</sub> α<sub>ki</sub>I<sub>i</sub>)</p>
-                <p style={{margin:0}}><strong>Volume:</strong> V|k ~ Lognormal(log(μ<sub>k</sub>), σ<sub>k</sub>)</p>
-                <p style={{margin:0}}><strong>Surface water:</strong> R|k ~ Bernoulli(p<sub>surface,k</sub>)</p>
-                <p style={{margin:0}}><strong>Spill cost:</strong> CAWD table → C (in $100K units)</p>
-                <p style={{margin:0}}><strong>Utility:</strong> U(−C)=−e<sup>C/ρ</sup> · γ=0.091, ρ=1/γ≈{RHO.toFixed(4)}</p>
-                <p style={{margin:0,color:"#22c55e"}}><strong>Objective:</strong> max<sub>I</sub> E[U(−C(I,ω))] s.t. Σ<sub>i</sub>c<sub>i</sub>I<sub>i</sub>≤B, I<sub>i</sub>≥0</p>
-                <p style={{margin:0}}><strong>P(N&gt;n):</strong> 1−Σ<sub>k=0</sub><sup>n</sup>e<sup>−λ</sup>λ<sup>k</sup>/k!</p>
+        {/* ══ INPUTS ═════════════════════════════════════════════════════════ */}
+        {tab==="inputs" && (
+          <div style={{display:"flex",flexDirection:"column",gap:14}}>
+            {baseline==="manual" ? (
+              <Panel title="Manual λ₀ (active when Manual selected above)">
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {modes.map(m=>(<NInput key={m.key} label={`${m.label} (${m.key})`} value={manualL0[m.key]} onChange={v=>setManualL0({...manualL0,[m.key]:Math.max(0,v)})}/>))}
+                </div>
+              </Panel>
+            ) : (
+              <Panel title={`Auto λ₀ from ${baselineLabel} — read only`}>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(155px,1fr))",gap:8}}>
+                  {modes.map(m=>(
+                    <div key={m.key} style={{background:"#020617",borderRadius:7,border:"1px solid #1e293b",padding:"7px 10px"}}>
+                      <div style={{fontSize:10,color:MODE_COLORS[m.key]}}>{m.label}</div>
+                      <div style={{fontSize:15,fontWeight:700,fontFamily:"'DM Mono',monospace",color:"#f1f5f9"}}>{fmt(lambda0[m.key],4)}</div>
+                    </div>
+                  ))}
+                </div>
+              </Panel>
+            )}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+              <Panel title="Simulation Settings">
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  <NInput label="MC runs" value={runs} step={1000} onChange={v=>setRuns(Math.max(100,Math.round(v)))}/>
+                  <NInput label="Budget ($100K units)" value={budget} onChange={v=>setBudget(Math.max(0,v))}/>
+                </div>
+                <h3 style={{margin:"12px 0 7px",fontSize:12,fontWeight:700,color:"#e2e8f0"}}>Investment unit costs (ci)</h3>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {levers.map(l=>(<NInput key={l.key} label={l.label} value={costs[l.key]} onChange={v=>setCosts({...costs,[l.key]:Math.max(0.01,v)})}/>))}
+                </div>
+              </Panel>
+              <Panel title="α matrix (from Formulas_ alpha_matrix)">
+                <div style={{overflowX:"auto"}}>
+                  <table style={{width:"100%",fontSize:11,borderCollapse:"collapse"}}>
+                    <thead>
+                      <tr style={{borderBottom:"1px solid #1e293b"}}>
+                        <th style={{padding:"4px 6px",textAlign:"left",color:"#64748b",fontSize:10}}>Mode</th>
+                        {levers.map(l=><th key={l.key} style={{padding:"4px 6px",textAlign:"left",color:"#64748b",fontSize:10}}>{l.short}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {modes.map(m=>(
+                        <tr key={m.key} style={{borderBottom:"1px solid #0f172a"}}>
+                          <td style={{padding:"4px 6px",fontWeight:600,color:MODE_COLORS[m.key],fontSize:10}}>{m.label}</td>
+                          {levers.map(l=>(
+                            <td key={l.key} style={{padding:"4px 6px"}}>
+                              <input type="number" step="0.001" value={alpha[m.key][l.key]}
+                                onChange={e=>setAlpha({...alpha,[m.key]:{...alpha[m.key],[l.key]:Number(e.target.value)}})}
+                                style={{width:72,borderRadius:6,border:"1px solid #334155",background:"#020617",padding:"3px 5px",color:"#f1f5f9",fontSize:10,textAlign:"right"}}/>
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p style={{margin:"6px 0 0",fontSize:10,color:"#475569"}}>P/I1=0.000: PM has no effect on pump-station failures per Formulas_. All other values from Formulas_ alpha_matrix exactly.</p>
+              </Panel>
+            </div>
+          </div>
+        )}
+
+        {/* ══ MODEL ══════════════════════════════════════════════════════════ */}
+        {tab==="model" && (
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+            <Panel title="PRA Equations — aligned to Formulas_">
+              <div style={{display:"flex",flexDirection:"column",gap:8,fontSize:12,color:"#cbd5e1",lineHeight:1.8}}>
+                <p style={{margin:0}}><strong>N<sub>k</sub>(I) ~ Poisson(λ<sub>k</sub>(I))</strong> — per Formulas_ simulate_annual_costs()</p>
+                <p style={{margin:0}}><strong>N(I) = N<sub>B</sub>+N<sub>F</sub>+N<sub>P</sub>+N<sub>H</sub>+N<sub>O</sub></strong></p>
+                <p style={{margin:0}}><strong>λ<sub>k</sub>(I) = λ<sub>k0</sub>·exp(−Σα<sub>ki</sub>I<sub>i</sub>)</strong> — lambda_after_investment()</p>
+                <p style={{margin:0}}><strong>cat ~ Categorical(q<sub>kc</sub>)</strong> — rng.choice([1,2,3,4], p=probs)</p>
+                <p style={{margin:0}}><strong>gallons = sample_gallons_for_category(cat, mode)</strong> — historical array or log-uniform</p>
+                <p style={{margin:0}}><strong>C = spill_cost(cat, gallons)</strong> — fixed O&M + per-gal fine</p>
+                <p style={{margin:0}}><strong>U(−C) = 1−exp(C/ρ)</strong> — expected_utility(), ρ=${fmt(RHO_DOLLARS/1e6,0)}M, clip at 50</p>
+                <p style={{margin:0,color:"#22c55e"}}><strong>max E[U] s.t. Σc<sub>i</sub>I<sub>i</sub>≤B</strong> — objective_value()</p>
+                <p style={{margin:0}}><strong>λ<sub>k0</sub> window:</strong> observed/years × 100/77.57 miles</p>
               </div>
             </Panel>
-            <Panel title="SAM Structure">
-              <div style={{display:"flex",flexDirection:"column",gap:14,fontSize:13,color:"#cbd5e1"}}>
-                <div><h3 style={{margin:"0 0 4px",fontSize:13,fontWeight:700,color:"#94a3b8"}}>Management → Actions</h3>
-                  <p style={{margin:0}}>M1→A1 · M2→A1,A2,A3 · M3→A3,A4 · M4→A2</p></div>
-                <div><h3 style={{margin:"0 0 4px",fontSize:13,fontWeight:700,color:"#94a3b8"}}>Actions → Failure Modes</h3>
-                  <p style={{margin:0}}>A1→B,F · A2→B,F,H · A3→O,P · A4→O</p></div>
-                <div><h3 style={{margin:"0 0 4px",fontSize:13,fontWeight:700,color:"#94a3b8"}}>Investment Levers</h3>
-                  {levers.map(l=><p key={l.key} style={{margin:"2px 0"}}><strong>{l.key}:</strong> {l.label}</p>)}</div>
-                <div style={{fontSize:11,color:"#64748b"}}>P/I1=0: PM has no effect on pump-station mechanical faults. I2 & I3 are the key levers for pump failures.</div>
+            <Panel title="q Matrix & SAM">
+              <div style={{display:"flex",flexDirection:"column",gap:10,fontSize:12,color:"#cbd5e1"}}>
+                <div>
+                  <h3 style={{margin:"0 0 4px",fontSize:11,fontWeight:700,color:"#94a3b8"}}>q<sub>kc</sub> = P(cat c | mode k) from Formulas_</h3>
+                  <table style={{fontSize:10,borderCollapse:"collapse",width:"100%"}}>
+                    <thead>
+                      <tr style={{borderBottom:"1px solid #1e293b"}}>
+                        <th style={{padding:"3px 5px",textAlign:"left",color:"#64748b"}}>Mode</th>
+                        <th style={{padding:"3px 5px",color:"#ef4444"}}>Cat1</th>
+                        <th style={{padding:"3px 5px",color:"#f97316"}}>Cat2</th>
+                        <th style={{padding:"3px 5px",color:"#22c55e"}}>Cat3</th>
+                        <th style={{padding:"3px 5px",color:"#38bdf8"}}>Cat4</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {modes.map(m=>(
+                        <tr key={m.key} style={{borderBottom:"1px solid #0f172a"}}>
+                          <td style={{padding:"3px 5px",color:MODE_COLORS[m.key]}}>{m.label}</td>
+                          {Q_MATRIX[m.key].map((v,i)=>(
+                            <td key={i} style={{padding:"3px 5px",fontFamily:"'DM Mono',monospace"}}>{v.toFixed(3)}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div>
+                  <h3 style={{margin:"0 0 4px",fontSize:11,fontWeight:700,color:"#94a3b8"}}>SAM: Management → Actions → System</h3>
+                  <p style={{margin:"2px 0",fontSize:11}}>M1(Maint. Freq) → A1(Maintain Lines) → B, F</p>
+                  <p style={{margin:"2px 0",fontSize:11}}>M2(Add Staff) → A1,A2(Surveillance) → B, F, H</p>
+                  <p style={{margin:"2px 0",fontSize:11}}>M3(Training) → A3(Response) → O, P</p>
+                  <p style={{margin:"2px 0",fontSize:11}}>M4(Risk Targeting) → A4(Reliable Exec) → O</p>
+                  <p style={{margin:"2px 0",fontSize:11}}>B, F, P, H, O → Sewer Spill event</p>
+                </div>
+                <p style={{fontSize:10,color:"#64748b"}}>All constants, formulas, and logic aligned to Formulas_ Python file exactly.</p>
               </div>
             </Panel>
           </div>
