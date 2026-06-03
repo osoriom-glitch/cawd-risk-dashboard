@@ -9,9 +9,9 @@ import {
 // mode keys: B=Blockage, F=Pipe Failure, P=Pump Failure, H=Hydraulic Overload, O=Operational
 // ─────────────────────────────────────────────────────────────────────────────
 const HISTORICAL_DATA = [
-  {"year":2000,"count":11,"totalGallons":2175,"spills":[{"gallons":75,"mode":"B"},{"gallons":800,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":20,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":30,"mode":"B"},{"gallons":150,"mode":"B"},{"gallons":300,"mode":"B"}]},
-  {"year":2001,"count":16,"totalGallons":5760,"spills":[{"gallons":10,"mode":"B"},{"gallons":800,"mode":"B"},{"gallons":400,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":300,"mode":"B"},{"gallons":450,"mode":"B"},{"gallons":300,"mode":"B"},{"gallons":650,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":200,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":300,"mode":"B"},{"gallons":200,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":500,"mode":"B"}]},
-  {"year":2002,"count":16,"totalGallons":3180,"spills":[{"gallons":100,"mode":"O"},{"gallons":250,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":30,"mode":"B"},{"gallons":40,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":60,"mode":"B"},{"gallons":1000,"mode":"B"},{"gallons":70,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":80,"mode":"B"},{"gallons":450,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":250,"mode":"F"}]},
+  {"year":2000,"count":11,"totalGallons":2175,"spills":[{"gallons":75,"mode":"B"},{"gallons":800,"mode":"U"},{"gallons":100,"mode":"B"},{"gallons":100,"mode":"U"},{"gallons":50,"mode":"U"},{"gallons":20,"mode":"U"},{"gallons":50,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":30,"mode":"B"},{"gallons":150,"mode":"B"},{"gallons":300,"mode":"B"}]},
+  {"year":2001,"count":16,"totalGallons":5760,"spills":[{"gallons":10,"mode":"B"},{"gallons":800,"mode":"B"},{"gallons":400,"mode":"U"},{"gallons":50,"mode":"U"},{"gallons":300,"mode":"U"},{"gallons":450,"mode":"B"},{"gallons":300,"mode":"U"},{"gallons":650,"mode":"U"},{"gallons":500,"mode":"U"},{"gallons":200,"mode":"B"},{"gallons":100,"mode":"U"},{"gallons":300,"mode":"B"},{"gallons":200,"mode":"B"},{"gallons":500,"mode":"U"},{"gallons":500,"mode":"U"},{"gallons":500,"mode":"B"}]},
+  {"year":2002,"count":16,"totalGallons":3180,"spills":[{"gallons":100,"mode":"B"},{"gallons":250,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":30,"mode":"B"},{"gallons":40,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":60,"mode":"B"},{"gallons":1000,"mode":"B"},{"gallons":70,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":80,"mode":"B"},{"gallons":450,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":250,"mode":"F"}]},
   {"year":2003,"count":14,"totalGallons":3445,"spills":[{"gallons":40,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":1000,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":75,"mode":"B"},{"gallons":40,"mode":"B"},{"gallons":40,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":60,"mode":"B"},{"gallons":400,"mode":"B"},{"gallons":150,"mode":"P"},{"gallons":540,"mode":"B"},{"gallons":300,"mode":"B"},{"gallons":150,"mode":"B"}]},
   {"year":2004,"count":10,"totalGallons":2815,"spills":[{"gallons":500,"mode":"B"},{"gallons":900,"mode":"B"},{"gallons":80,"mode":"B"},{"gallons":60,"mode":"B"},{"gallons":100,"mode":"B"},{"gallons":25,"mode":"B"},{"gallons":150,"mode":"B"},{"gallons":350,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":600,"mode":"B"}]},
   {"year":2005,"count":5,"totalGallons":825,"spills":[{"gallons":300,"mode":"B"},{"gallons":225,"mode":"B"},{"gallons":180,"mode":"B"},{"gallons":20,"mode":"B"},{"gallons":100,"mode":"B"}]},
@@ -19,23 +19,23 @@ const HISTORICAL_DATA = [
   {"year":2007,"count":5,"totalGallons":1480,"spills":[{"gallons":400,"mode":"B"},{"gallons":600,"mode":"B"},{"gallons":200,"mode":"B"},{"gallons":250,"mode":"B"},{"gallons":30,"mode":"B"}]},
   {"year":2008,"count":6,"totalGallons":1380,"spills":[{"gallons":135,"mode":"B"},{"gallons":85,"mode":"B"},{"gallons":35,"mode":"B"},{"gallons":400,"mode":"B"},{"gallons":325,"mode":"B"},{"gallons":400,"mode":"F"}]},
   {"year":2009,"count":8,"totalGallons":1835,"spills":[{"gallons":250,"mode":"B"},{"gallons":60,"mode":"B"},{"gallons":150,"mode":"B"},{"gallons":65,"mode":"B"},{"gallons":150,"mode":"B"},{"gallons":200,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":460,"mode":"B"}]},
-  {"year":2010,"count":4,"totalGallons":400,"spills":[{"gallons":50,"mode":"B"},{"gallons":150,"mode":"B"},{"gallons":50,"mode":"F"},{"gallons":150,"mode":"B"}]},
+  {"year":2010,"count":4,"totalGallons":400,"spills":[{"gallons":50,"mode":"B"},{"gallons":150,"mode":"B"},{"gallons":50,"mode":"F"},{"gallons":150,"mode":"F"}]},
   {"year":2011,"count":8,"totalGallons":2450,"spills":[{"gallons":50,"mode":"B"},{"gallons":55,"mode":"B"},{"gallons":80,"mode":"B"},{"gallons":650,"mode":"B"},{"gallons":200,"mode":"B"},{"gallons":30,"mode":"B"},{"gallons":560,"mode":"B"},{"gallons":825,"mode":"B"}]},
   {"year":2012,"count":8,"totalGallons":5880,"spills":[{"gallons":40,"mode":"B"},{"gallons":40,"mode":"B"},{"gallons":2400,"mode":"B"},{"gallons":900,"mode":"B"},{"gallons":900,"mode":"B"},{"gallons":500,"mode":"B"},{"gallons":850,"mode":"B"},{"gallons":250,"mode":"B"}]},
   {"year":2013,"count":5,"totalGallons":3765,"spills":[{"gallons":700,"mode":"B"},{"gallons":50,"mode":"B"},{"gallons":40,"mode":"B"},{"gallons":2800,"mode":"B"},{"gallons":175,"mode":"B"}]},
   {"year":2014,"count":7,"totalGallons":6488,"spills":[{"gallons":30,"mode":"B"},{"gallons":85,"mode":"B"},{"gallons":257,"mode":"B"},{"gallons":522,"mode":"B"},{"gallons":258,"mode":"B"},{"gallons":4500,"mode":"B"},{"gallons":836,"mode":"B"}]},
   {"year":2015,"count":4,"totalGallons":14471,"spills":[{"gallons":1557,"mode":"B"},{"gallons":40,"mode":"B"},{"gallons":10474,"mode":"B"},{"gallons":2400,"mode":"B"}]},
-  {"year":2016,"count":5,"totalGallons":1600,"spills":[{"gallons":212,"mode":"B"},{"gallons":688,"mode":"B"},{"gallons":10,"mode":"B"},{"gallons":630,"mode":"B"},{"gallons":60,"mode":"O"}]},
+  {"year":2016,"count":5,"totalGallons":1600,"spills":[{"gallons":212,"mode":"B"},{"gallons":688,"mode":"B"},{"gallons":10,"mode":"B"},{"gallons":630,"mode":"B"},{"gallons":60,"mode":"B"}]},
   {"year":2017,"count":4,"totalGallons":147447,"spills":[{"gallons":1650,"mode":"B"},{"gallons":145000,"mode":"F"},{"gallons":17,"mode":"F"},{"gallons":780,"mode":"B"}]},
-  {"year":2018,"count":3,"totalGallons":888,"spills":[{"gallons":380,"mode":"B"},{"gallons":180,"mode":"F"},{"gallons":328,"mode":"B"}]},
+  {"year":2018,"count":2,"totalGallons":708,"spills":[{"gallons":380,"mode":"B"},{"gallons":328,"mode":"B"}]},
   {"year":2019,"count":1,"totalGallons":2008,"spills":[{"gallons":2008,"mode":"F"}]},
   {"year":2020,"count":0,"totalGallons":0,"spills":[]},
   {"year":2021,"count":4,"totalGallons":2849,"spills":[{"gallons":476,"mode":"B"},{"gallons":802,"mode":"B"},{"gallons":454,"mode":"B"},{"gallons":1117,"mode":"B"}]},
   {"year":2022,"count":6,"totalGallons":7891,"spills":[{"gallons":90,"mode":"B"},{"gallons":20,"mode":"B"},{"gallons":1896,"mode":"B"},{"gallons":5625,"mode":"B"},{"gallons":129,"mode":"B"},{"gallons":131,"mode":"B"}]},
-  {"year":2023,"count":10,"totalGallons":100705,"spills":[{"gallons":5419,"mode":"B"},{"gallons":506,"mode":"B"},{"gallons":108,"mode":"B"},{"gallons":1301,"mode":"B"},{"gallons":361,"mode":"F"},{"gallons":48269,"mode":"F"},{"gallons":222,"mode":"B"},{"gallons":357,"mode":"F"},{"gallons":44159,"mode":"F"},{"gallons":3,"mode":"F"}]},
-  {"year":2024,"count":2,"totalGallons":24458,"spills":[{"gallons":1777,"mode":"B"},{"gallons":22681,"mode":"F"}]},
-  {"year":2025,"count":4,"totalGallons":10999,"spills":[{"gallons":9156,"mode":"F"},{"gallons":1798,"mode":"F"},{"gallons":20,"mode":"B"},{"gallons":25,"mode":"F"}]},
-  {"year":2026,"count":1,"totalGallons":9429,"spills":[{"gallons":9429,"mode":"F"}]},
+  {"year":2023,"count":9,"totalGallons":100348,"spills":[{"gallons":5419,"mode":"B"},{"gallons":506,"mode":"B"},{"gallons":108,"mode":"B"},{"gallons":1301,"mode":"B"},{"gallons":361,"mode":"F"},{"gallons":48269,"mode":"F"},{"gallons":222,"mode":"B"},{"gallons":44159,"mode":"F"},{"gallons":3,"mode":"F"}]},
+  {"year":2024,"count":2,"totalGallons":24458,"spills":[{"gallons":1777,"mode":"F"},{"gallons":22681,"mode":"F"}]},
+  {"year":2025,"count":2,"totalGallons":9176,"spills":[{"gallons":9156,"mode":"F"},{"gallons":20,"mode":"B"}]},
+  {"year":2026,"count":1,"totalGallons":9429,"spills":[{"gallons":9429,"mode":"F"}]}
 ];
 
 const CURRENT_YEAR = 2026;
@@ -98,6 +98,22 @@ const GAMMA       = 0.091;
 const RHO_DOLLARS = 10_000_000; // matching Formulas_ RHO exactly
 
 // ─────────────────────────────────────────────────────────────────────────────
+// SEEDED RNG — mulberry32. Used ONLY by the Sensitivity tab so that the budget
+// sweep, maintenance-cap analysis, and tornado diagram are fully reproducible.
+// The Dashboard / Cost / Optimizer tabs keep using Math.random (live "Re-run MC").
+// ─────────────────────────────────────────────────────────────────────────────
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const SENS_SEED = 12345; // fixed seed → board sees identical numbers every load
+
+// ─────────────────────────────────────────────────────────────────────────────
 // COST MODEL — exact match to Formulas_ spill_cost(category, gallons)
 // ─────────────────────────────────────────────────────────────────────────────
 function spillCost(category, gallons) {
@@ -110,8 +126,9 @@ function spillCost(category, gallons) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // VOLUME SAMPLING — exact match to Formulas_ sample_gallons_for_category()
+// Accepts an optional rng (defaults to Math.random) so seeded runs are possible.
 // ─────────────────────────────────────────────────────────────────────────────
-function sampleGallons(category, modeKey) {
+function sampleGallons(category, modeKey, rng = Math.random) {
   const data = HIST_GALLONS[modeKey];
   if (data) {
     let candidates;
@@ -119,13 +136,13 @@ function sampleGallons(category, modeKey) {
     else if (category === 2) candidates = data.filter(g => g > 1000);
     else if (category === 3) candidates = data.filter(g => g >= 50 && g <= 1000);
     else                     candidates = data.filter(g => g < 50);
-    if (candidates.length > 0) return candidates[Math.floor(Math.random() * candidates.length)];
+    if (candidates.length > 0) return candidates[Math.floor(rng() * candidates.length)];
   }
   // log-uniform fallback matching Formulas_
-  if (category === 1) return Math.exp(Math.random() * (Math.log(150000) - Math.log(50))   + Math.log(50));
-  if (category === 2) return Math.exp(Math.random() * (Math.log(50000)  - Math.log(1000)) + Math.log(1000));
-  if (category === 3) return Math.exp(Math.random() * (Math.log(1000)   - Math.log(50))   + Math.log(50));
-  return 1 + Math.random() * 49;
+  if (category === 1) return Math.exp(rng() * (Math.log(150000) - Math.log(50))   + Math.log(50));
+  if (category === 2) return Math.exp(rng() * (Math.log(50000)  - Math.log(1000)) + Math.log(1000));
+  if (category === 3) return Math.exp(rng() * (Math.log(1000)   - Math.log(50))   + Math.log(50));
+  return 1 + rng() * 49;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -133,68 +150,61 @@ function sampleGallons(category, modeKey) {
 //   U(-C) = 1 - exp(C / rho)   ← NOTE: 1 minus, not negative
 //   x clipped at 50 to avoid overflow
 // ─────────────────────────────────────────────────────────────────────────────
-function expUtility(costDollars) {
-  const x = Math.min(costDollars / RHO_DOLLARS, 50);
+function expUtility(costDollars, rho = RHO_DOLLARS) {
+  const x = Math.min(costDollars / rho, 50);
   return 1 - Math.exp(x);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CAUSE → FAILURE MODE mapping for spreadsheet upload
-// Mirrors how the Python assigns modes from the CAWD cause field
+// CAUSE → FAILURE MODE mapping (spreadsheet upload AND embedded data)
+// Stricter than a catch-all: blank / unrecognized causes go to "U" (Unknown),
+// NOT silently to Blockage. Unknown rows are counted in totals but EXCLUDED from
+// the per-mode λ₀ rate (you can't attribute a rate to a cause you never observed).
+// Pipe-failure keywords expanded to catch miscodes ("patch broke off",
+// "tree fell ... broke the main"). Foreign-object jams ("water key wedged") = B.
 // ─────────────────────────────────────────────────────────────────────────────
 function causeToMode(causeStr) {
-  const c = (causeStr || "").toLowerCase();
+  const c = (causeStr || "").trim().toLowerCase();
+  if (c === "") return "U"; // no recorded cause → Unknown
   if (c.includes("pump"))                                                   return "P";
   if (c.includes("hydraulic") || c.includes("i&i") || c.includes("inflow")) return "H";
-  if (["broken","break","pipe","liner","sag","fitting","dip","damage","crack"].some(k => c.includes(k))) return "F";
+  if (["broken","break","pipe","liner","sag","fitting","dip","damage","crack","patch","broke","collapse","tree fell"].some(k => c.includes(k))) return "F";
   if (["jetting","operational","operator"].some(k => c.includes(k)))        return "O";
-  // everything else is Blockage (roots, grease, grit, rags, debris, FOG, unknown)
-  return "B";
+  if (["root","grease","grit","rag","fog","debris","rock","solids","wipe","block","water key","wedged"].some(k => c.includes(k))) return "B";
+  return "U"; // recognized nothing → Unknown, not Blockage
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SPREADSHEET CSV PARSER
-// Supports BOTH CAWD formats:
-//   Early  (2000–2012): DATE, SPILL LOCATION, GALLONS SPILLED, CAUSE
-//   Later  (2013+):     DATE, SPILL LOCATION, LINE SEGMENT, GALLONS SPILLED, GALLONS RECOVERED, CAUSE, ...
-// Format detected by checking whether col[2] looks like a line segment code (letters+digits)
 // ─────────────────────────────────────────────────────────────────────────────
 function isLineSegmentCol(val) {
-  // Line segment codes look like "M746-M747", "O770-O773", "R1137-R1138"
   return /^[A-Z]\d+/i.test((val || "").trim());
 }
 
 function excelSerialToYear(serial) {
-  // Excel date serial → year
   const d = new Date(Date.UTC(1899, 11, 30) + serial * 86400000);
   return d.getUTCFullYear();
 }
 
 function parseCAWDCsv(text) {
-  // Split into non-empty lines
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
   const spills = [];
   let currentYear = null;
 
   for (const line of lines) {
-    // Skip header / title rows
     if (/^(DATE|CAWD|YEAR|\s*$)/i.test(line)) continue;
     if (/NO SPILLS/i.test(line)) continue;
 
     const cols = line.split(/[,\t]/).map(c => c.trim().replace(/^"|"$/g, ""));
     if (cols.length < 3) continue;
 
-    // Try to detect year from first col
     const col0 = cols[0];
     const asNum = parseFloat(col0);
 
-    // If it's a 4-digit year header row like "2013"
     if (/^\d{4}$/.test(col0) && cols.length === 1) { currentYear = parseInt(col0); continue; }
 
-    // Determine format
     let gallons, causeStr, year;
     if (!isNaN(asNum) && asNum > 30000 && asNum < 50000) {
-      // Excel serial date
       year = excelSerialToYear(Math.round(asNum));
     } else if (/^\d{4}-\d{2}-\d{2}/.test(col0) || /^\d{1,2}\/\d{1,2}\/\d{4}/.test(col0)) {
       year = parseInt(col0.replace(/-.*/, "").split("/").pop());
@@ -207,13 +217,10 @@ function parseCAWDCsv(text) {
     if (!year || year < 1990 || year > 2100) continue;
     currentYear = year;
 
-    // Detect format: does col[2] look like a line segment?
     if (isLineSegmentCol(cols[2])) {
-      // Later format: DATE, LOCATION, LINE_SEG, GALLONS, RECOVERED, CAUSE, ...
       gallons  = parseFloat(cols[3]);
       causeStr = cols[5] || "";
     } else {
-      // Early format: DATE, LOCATION, GALLONS, CAUSE
       gallons  = parseFloat(cols[2]);
       causeStr = cols[3] || "";
     }
@@ -223,7 +230,6 @@ function parseCAWDCsv(text) {
     spills.push({ year, gallons, mode: causeToMode(causeStr), cause: causeStr });
   }
 
-  // Aggregate by year
   const byYear = {};
   for (const s of spills) {
     if (!byYear[s.year]) byYear[s.year] = { year:s.year, count:0, totalGallons:0, spills:[] };
@@ -235,19 +241,19 @@ function parseCAWDCsv(text) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MATH UTILITIES
+// MATH UTILITIES — Poisson / weighted choice accept an optional rng
 // ─────────────────────────────────────────────────────────────────────────────
-function poissonSample(lambda) {
+function poissonSample(lambda, rng = Math.random) {
   if (lambda <= 0) return 0;
   const limit = Math.exp(-lambda);
   let count = 0, product = 1;
-  do { count++; product *= Math.random(); } while (product > limit);
+  do { count++; product *= rng(); } while (product > limit);
   return count - 1;
 }
 
-function weightedChoice(weights) {
+function weightedChoice(weights, rng = Math.random) {
   const total = weights.reduce((a,b) => a+b, 0);
-  let r = Math.random() * total, cum = 0;
+  let r = rng() * total, cum = 0;
   for (let i = 0; i < weights.length; i++) { cum += weights[i]; if (r <= cum) return i; }
   return weights.length - 1;
 }
@@ -284,17 +290,17 @@ function fmtDollars(dollars) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SIMULATE ONE YEAR — mirrors Formulas_ simulate_annual_costs() inner loop
+// SIMULATE ONE YEAR — accepts optional rng for seeded runs
 // ─────────────────────────────────────────────────────────────────────────────
-function simulateYear(lambdas) {
+function simulateYear(lambdas, rng = Math.random) {
   let n = 0, totalCost = 0;
   for (const m of modes) {
-    const count = poissonSample(lambdas[m.key]||0);
+    const count = poissonSample(lambdas[m.key]||0, rng);
     n += count;
     for (let j = 0; j < count; j++) {
-      const catIdx  = weightedChoice(Q_MATRIX[m.key]); // matches rng.choice([1,2,3,4], p=probs)
+      const catIdx  = weightedChoice(Q_MATRIX[m.key], rng);
       const category = catIdx + 1;
-      const gallons  = sampleGallons(category, m.key);
+      const gallons  = sampleGallons(category, m.key, rng);
       totalCost += spillCost(category, gallons);
     }
   }
@@ -302,7 +308,7 @@ function simulateYear(lambdas) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MONTE CARLO — mirrors Formulas_ simulate_annual_costs() outer loop
+// MONTE CARLO — Dashboard/Cost tabs (live, Math.random)
 // ─────────────────────────────────────────────────────────────────────────────
 function monteCarlo(lambdas, runs, threshold) {
   const HIST_MAX = 15;
@@ -329,7 +335,7 @@ function monteCarlo(lambdas, runs, threshold) {
     }
     totalSpills  += n;
     totalCost    += yearCost;
-    totalUtility += expUtility(yearCost); // U(-C) = 1 - exp(C/rho)
+    totalUtility += expUtility(yearCost);
     annualCosts.push(yearCost);
     hist[Math.min(n, HIST_MAX)].count++;
     if (n >= 1)             cntAtLeastOne++;
@@ -345,7 +351,7 @@ function monteCarlo(lambdas, runs, threshold) {
   return {
     mean:            totalSpills  / runs,
     expectedCost:    totalCost    / runs,
-    expectedUtility: totalUtility / runs,  // matches Formulas_ summarize()["expected_utility"]
+    expectedUtility: totalUtility / runs,
     pAtLeastOne:     cntAtLeastOne    / runs,
     pOverThreshold:  cntOverThreshold / runs,
     pCostOver1M:     cntCostOver1M    / runs,
@@ -362,22 +368,27 @@ function monteCarlo(lambdas, runs, threshold) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GREEDY OPTIMIZER — maximizes E[U(-C)] = E[1 - exp(C/rho)]
-// matching Formulas_ objective_value() / optimize_allocation logic
+// E[U] EVALUATION — accepts an rng so the optimizer can run seeded
 // ─────────────────────────────────────────────────────────────────────────────
-const MC_OPT_RUNS = 400;
-
-function euFor(lambda0, alpha, inv, runs) {
+function euFor(lambda0, alpha, inv, runs, rng = Math.random) {
   const lambdas = computeLambdas(lambda0, alpha, inv);
   let sumU = 0;
-  for (let r = 0; r < runs; r++) { const {totalCost} = simulateYear(lambdas); sumU += expUtility(totalCost); }
+  for (let r = 0; r < runs; r++) { const {totalCost} = simulateYear(lambdas, rng); sumU += expUtility(totalCost); }
   return sumU / runs;
 }
 
-function greedyOptimize(lambda0, alpha, costs, budget, step=0.25) {
+// ─────────────────────────────────────────────────────────────────────────────
+// GREEDY OPTIMIZER — Dashboard/Optimizer tabs (live)
+// ─────────────────────────────────────────────────────────────────────────────
+const MC_OPT_RUNS      = 400;   // live optimizer (Dashboard/Optimizer)
+const MC_SENS_RUNS     = 1500;  // seeded sensitivity sweep — more runs, no noise penalty
+const ENTRY_THRESHOLD  = 0.5;   // a lever "enters" when it holds ≥ 0.5 units ($50K)
+const PERSIST_STEPS    = 3;     // …and stays there for ≥ 3 consecutive budget steps
+
+function greedyOptimize(lambda0, alpha, costs, budget, step=0.25, runs=MC_OPT_RUNS, rng=Math.random) {
   const inv = {I1:0,I2:0,I3:0,I4:0};
   let remaining = budget;
-  let currentEU = euFor(lambda0, alpha, inv, MC_OPT_RUNS);
+  let currentEU = euFor(lambda0, alpha, inv, runs, rng);
   const path = [{step:0, eu:currentEU, lambda:sumValues(computeLambdas(lambda0,alpha,inv)), ...inv}];
   let t = 0;
   while (remaining >= step && t < 1000) {
@@ -386,7 +397,7 @@ function greedyOptimize(lambda0, alpha, costs, budget, step=0.25) {
       const cost = costs[lever.key]||1;
       if (cost*step > remaining) continue;
       const trial = {...inv, [lever.key]:inv[lever.key]+step};
-      const trialEU = euFor(lambda0, alpha, trial, MC_OPT_RUNS);
+      const trialEU = euFor(lambda0, alpha, trial, runs, rng);
       if (trialEU > bestEU) { bestEU=trialEU; bestLever=lever.key; }
     }
     if (!bestLever || bestEU <= currentEU) break;
@@ -400,16 +411,33 @@ function greedyOptimize(lambda0, alpha, costs, budget, step=0.25) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HISTORICAL ANALYTICS
-// λ₀ = (observed events in window) / years × (100 / SYSTEM_MILES)
-// mirrors slide formula: λ_B0 = 132/26.25 × 100/77.57 = 6.48
+// λ₀ = (cause-attributed events in window) / (elapsed years of exposure) × 100/miles
+// Denominator = fractional elapsed years. Data runs through end of March 2026, so
+// 2026 contributes 0.25 yr. The zero-spill year 2020 is treated as a full year of
+// exposure that is REMOVED from the denominator (per team decision), so any window
+// containing 2020 has 1.00 yr subtracted. Unknown-cause ("U") rows are counted in
+// totals/Historical but EXCLUDED here — no rate is attributed to an unrecorded cause.
 // ─────────────────────────────────────────────────────────────────────────────
+const DATA_END_FRACTION = 0.25; // through end of March 2026 → 2026 = quarter year
+
+function windowExposureYears(data) {
+  if (!data.length) return 1;
+  const years = data.map(d => d.year);
+  const minY = Math.min(...years);
+  const maxY = Math.max(...years);
+  // elapsed span: full years from minY up to maxY, with maxY=2026 only a quarter
+  let span = (maxY - minY) + (maxY >= 2026 ? DATA_END_FRACTION : 1.0);
+  // subtract the zero-spill 2020 if it lies inside the window
+  if (minY <= 2020 && maxY >= 2020) span -= 1.0;
+  return span > 0 ? span : 1;
+}
+
 function computeLambda0FromWindow(data) {
-  const valid = data.filter(d => d.year !== 2020); // exclude zero-spill year from rate
-  const years = valid.length || 1;
-  const mc = {B:0,F:0,P:0,H:0,O:0};
-  valid.forEach(yr => yr.spills.forEach(s => { if (mc[s.mode]!==undefined) mc[s.mode]++; else mc.B++; }));
+  const denom = windowExposureYears(data);
+  const mc = {B:0,F:0,P:0,H:0,O:0}; // U intentionally absent → excluded from rate
+  data.forEach(yr => yr.spills.forEach(s => { if (mc[s.mode] !== undefined) mc[s.mode]++; }));
   const result = {};
-  for (const m of modes) result[m.key] = (mc[m.key]/years) * (100/SYSTEM_MILES);
+  for (const m of modes) result[m.key] = (mc[m.key]/denom) * (100/SYSTEM_MILES);
   return result;
 }
 
@@ -418,7 +446,7 @@ function historicalStats(data) {
   const avgSpills  = valid.length ? valid.reduce((s,d)=>s+d.count,0)/valid.length : 0;
   const avgGallons = valid.length ? valid.reduce((s,d)=>s+d.totalGallons,0)/valid.length : 0;
   const totalSpills = valid.reduce((s,d)=>s+d.count,0);
-  const mc = {B:0,F:0,P:0,H:0,O:0};
+  const mc = {B:0,F:0,P:0,H:0,O:0,U:0};
   valid.forEach(yr => yr.spills.forEach(s => { if(mc[s.mode]!==undefined) mc[s.mode]++; }));
   return {avgSpills, avgGallons, totalSpills, modeCounts:mc, years:valid.length};
 }
@@ -427,7 +455,7 @@ function historicalStats(data) {
 // UI COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────
 const CAT_COLORS  = {"Cat 1":"#ef4444","Cat 2":"#f97316","Cat 3":"#22c55e","Cat 4":"#38bdf8"};
-const MODE_COLORS = {B:"#38bdf8",F:"#f97316",P:"#34d399",H:"#a78bfa",O:"#facc15"};
+const MODE_COLORS = {B:"#38bdf8",F:"#f97316",P:"#34d399",H:"#a78bfa",O:"#facc15",U:"#64748b"};
 
 function Kpi({title,value,subtitle,accent}) {
   return (
@@ -477,29 +505,25 @@ export default function App() {
   const [budget,      setBudget]     = useState(5.5);
   const [thresholdN,  setThresholdN] = useState(5);
   const [tab,         setTab]        = useState("dashboard");
-  const [baseline,    setBaseline]   = useState("historical"); // "5yr"|"10yr"|"historical"|"manual"
+  const [baseline,    setBaseline]   = useState("historical");
   const [manualL0,    setManualL0]   = useState(DEFAULT_LAMBDA0);
   const [histView,    setHistView]   = useState("historical");
   const [rerun,       setRerun]      = useState(0);
 
-  // Data tab state
-  const [liveDataset, setLiveDataset] = useState(null); // uploaded dataset merges here
+  const [liveDataset, setLiveDataset] = useState(null);
   const [uploadMsg,   setUploadMsg]   = useState("");
   const [uploadOk,    setUploadOk]    = useState(false);
   const fileRef = useRef(null);
 
-  // Active dataset = uploaded if present, else embedded
   const activeDataset = liveDataset || HISTORICAL_DATA;
 
-  // Baseline window filter
   const baselineData = useMemo(() => {
     if (baseline === "5yr")  return activeDataset.filter(d => d.year >= CURRENT_YEAR-4);
     if (baseline === "10yr") return activeDataset.filter(d => d.year >= CURRENT_YEAR-9);
     if (baseline === "manual") return [];
-    return activeDataset; // historical = all
+    return activeDataset;
   }, [baseline, activeDataset]);
 
-  // λ₀ auto-computed or manual
   const lambda0 = useMemo(() => {
     if (baseline === "manual") return manualL0;
     if (baselineData.length === 0) return DEFAULT_LAMBDA0;
@@ -527,7 +551,6 @@ export default function App() {
   const optLambda  = sumValues(optLambdas);
   const pGTn       = 1 - poissonCdf(threshold, scenarioLambda);
 
-  // Historical view window (separate from baseline)
   const histDataForView = useMemo(() => {
     if (histView === "5yr")  return activeDataset.filter(d => d.year >= CURRENT_YEAR-4);
     if (histView === "10yr") return activeDataset.filter(d => d.year >= CURRENT_YEAR-9);
@@ -536,7 +559,6 @@ export default function App() {
 
   const histSummary = useMemo(() => historicalStats(histDataForView), [histDataForView]);
 
-  // Chart data
   const modeChart   = modes.map(m=>({mode:m.key,name:m.label,baseline:+lambda0[m.key].toFixed(3),scenario:+scenarioLambdas[m.key].toFixed(3),optimized:+optLambdas[m.key].toFixed(3)}));
   const investChart = levers.map(l=>({lever:l.short,scenario:investment[l.key],optimized:optimized.investment[l.key]}));
   const histChart   = histDataForView.map(d=>({year:d.year,count:d.count,gallons:d.totalGallons}));
@@ -546,7 +568,6 @@ export default function App() {
     "5yr":"Last 5 yrs (Board)","10yr":"Last 10 yrs","historical":"Full history (2000–2026)","manual":"Manual"
   }[baseline];
 
-  // ── CSV upload handler ───────────────────────────────────────────────────
   function handleUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -571,15 +592,20 @@ export default function App() {
   const tabs = ["dashboard","historical","data","cost","optimizer","sensitivity","inputs","model"];
 
   // ── Sensitivity Analysis state ───────────────────────────────────────────
-  const [sensBudgetMax,   setSensBudgetMax]   = useState(20);   // max budget to sweep ($100K units)
-  const [sensI1Cap,       setSensI1Cap]       = useState(3);    // max units allowed in I1
-  const [sensVolScenario, setSensVolScenario] = useState("base"); // "min"|"base"|"max"
+  const [sensBudgetMax,   setSensBudgetMax]   = useState(20);
+  const [sensI1Cap,       setSensI1Cap]       = useState(3);
+  const [sensVolScenario, setSensVolScenario] = useState("base");
 
-  // SA1: Budget sweep — run optimizer at each budget level, record allocation & E[U]
+  // ── SA1: Budget sweep — SEEDED. Each budget point runs the greedy optimizer
+  // with a fresh seed derived from SENS_SEED + the budget index, so the whole
+  // sweep is deterministic (identical on every load) but each point is still
+  // an independent draw. More runs (MC_SENS_RUNS) → low noise.
   const budgetSweep = useMemo(() => {
     const results = [];
-    for (let b = 0.25; b <= sensBudgetMax; b += 0.25) {
-      const opt = greedyOptimize(lambda0, alpha, costs, b);
+    let idx = 0;
+    for (let b = 0.25; b <= sensBudgetMax + 1e-9; b += 0.25) {
+      const rng = mulberry32(SENS_SEED + idx); // deterministic per budget step
+      const opt = greedyOptimize(lambda0, alpha, costs, +b.toFixed(2), 0.25, MC_SENS_RUNS, rng);
       results.push({
         budget: +b.toFixed(2),
         budgetDollars: +(b * 100).toFixed(0),
@@ -590,34 +616,51 @@ export default function App() {
         I4: +opt.investment.I4.toFixed(2),
         lambda: +sumValues(computeLambdas(lambda0, alpha, opt.investment)).toFixed(3),
       });
+      idx++;
     }
     return results;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lambda0, alpha, costs, sensBudgetMax, rerun]);
+  }, [lambda0, alpha, costs, sensBudgetMax]);
 
-  // Find threshold where a second lever first gets any allocation
+  // ── Threshold detection with PERSISTENCE ──────────────────────────────────
+  // A second lever has genuinely "entered" only when some non-I1 lever holds
+  // ≥ ENTRY_THRESHOLD units for ≥ PERSIST_STEPS consecutive budget points.
+  // We report the FIRST budget point of that persistent run, not the blip.
   const budgetThreshold = useMemo(() => {
-    for (const r of budgetSweep) {
-      const nonZero = [r.I1,r.I2,r.I3,r.I4].filter(v=>v>0).length;
-      if (nonZero >= 2) return r;
+    const others = ["I2","I3","I4"];
+    for (let i = 0; i < budgetSweep.length; i++) {
+      // does any non-I1 lever clear the entry threshold here?
+      const entrant = others.find(k => budgetSweep[i][k] >= ENTRY_THRESHOLD);
+      if (!entrant) continue;
+      // check it (or any non-I1 lever) persists for the next PERSIST_STEPS-1 points
+      let persists = true;
+      for (let j = i; j < Math.min(i + PERSIST_STEPS, budgetSweep.length); j++) {
+        const stillIn = others.some(k => budgetSweep[j][k] >= ENTRY_THRESHOLD);
+        if (!stillIn) { persists = false; break; }
+      }
+      // require we actually had enough points to confirm persistence
+      if (persists && i + PERSIST_STEPS <= budgetSweep.length) {
+        return { ...budgetSweep[i], entrant };
+      }
     }
     return null;
   }, [budgetSweep]);
 
-  // SA2: I1 cap — greedy optimizer with I1 capped at sensI1Cap
-  function greedyOptimizeCapped(lambda0, alpha, costs, budget, capI1, step=0.25) {
+  // ── SA2: I1 cap — also SEEDED for reproducibility ──────────────────────────
+  function greedyOptimizeCapped(lambda0, alpha, costs, budget, capI1, step=0.25, runs=MC_SENS_RUNS, rng) {
+    const r = rng || mulberry32(SENS_SEED + 9999);
     const inv = {I1:0,I2:0,I3:0,I4:0};
     let remaining = budget;
-    let currentEU = euFor(lambda0, alpha, inv, MC_OPT_RUNS);
+    let currentEU = euFor(lambda0, alpha, inv, runs, r);
     let t = 0;
     while (remaining >= step && t < 1000) {
       let bestLever=null, bestEU=-Infinity;
       for (const lever of levers) {
         const cost = costs[lever.key]||1;
         if (cost*step > remaining) continue;
-        if (lever.key==="I1" && inv.I1+step > capI1) continue; // cap
+        if (lever.key==="I1" && inv.I1+step > capI1) continue;
         const trial = {...inv,[lever.key]:inv[lever.key]+step};
-        const trialEU = euFor(lambda0,alpha,trial,MC_OPT_RUNS);
+        const trialEU = euFor(lambda0,alpha,trial,runs,r);
         if (trialEU>bestEU){bestEU=trialEU;bestLever=lever.key;}
       }
       if (!bestLever||bestEU<=currentEU) break;
@@ -628,33 +671,37 @@ export default function App() {
     return {investment:inv,remaining,finalEU:currentEU};
   }
 
-  const cappedOpt = useMemo(() =>
-    greedyOptimizeCapped(lambda0, alpha, costs, budget, sensI1Cap),
+  // Unconstrained seeded optimum at current budget — apples-to-apples with capped
+  const seededOpt = useMemo(() =>
+    greedyOptimize(lambda0, alpha, costs, budget, 0.25, MC_SENS_RUNS, mulberry32(SENS_SEED + 7777)),
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  [lambda0, alpha, costs, budget, sensI1Cap, rerun]);
+  [lambda0, alpha, costs, budget]);
+  const seededOptLambda = sumValues(computeLambdas(lambda0, alpha, seededOpt.investment));
+
+  const cappedOpt = useMemo(() =>
+    greedyOptimizeCapped(lambda0, alpha, costs, budget, sensI1Cap, 0.25, MC_SENS_RUNS, mulberry32(SENS_SEED + 8888)),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [lambda0, alpha, costs, budget, sensI1Cap]);
 
   const cappedLambda = sumValues(computeLambdas(lambda0, alpha, cappedOpt.investment));
 
-  // SA3: Tornado diagram — vary each input ±extreme, measure impact on E[expected cost]
-  // For volume: override sampleGallons to always return min or max per category
-  function mcWithVolumeOverride(lambdas, runs, volMode) {
-    // volMode: "min" = always use minimum historical volume per cat
-    //          "max" = always use maximum historical volume per cat
-    //          "base" = normal sampling
+  // ── SA3: Tornado — SEEDED volume / λ / ρ overrides ─────────────────────────
+  function mcWithVolumeOverride(lambdas, runs, volMode, rng) {
+    const r = rng || mulberry32(SENS_SEED + 1);
     const CAT_MIN = {1:50,   2:1001, 3:50,  4:1};
     const CAT_MAX = {1:145000,2:50000,3:1000,4:49};
     let totalCost = 0, totalUtility = 0, cntOver1M = 0;
-    for (let r = 0; r < runs; r++) {
+    for (let i = 0; i < runs; i++) {
       let yearCost = 0;
       for (const m of modes) {
-        const count = poissonSample(lambdas[m.key]||0);
+        const count = poissonSample(lambdas[m.key]||0, r);
         for (let j = 0; j < count; j++) {
-          const catIdx = weightedChoice(Q_MATRIX[m.key]);
+          const catIdx = weightedChoice(Q_MATRIX[m.key], r);
           const category = catIdx+1;
           let gallons;
           if      (volMode==="min") gallons = CAT_MIN[category];
           else if (volMode==="max") gallons = CAT_MAX[category];
-          else                      gallons = sampleGallons(category, m.key);
+          else                      gallons = sampleGallons(category, m.key, r);
           yearCost += spillCost(category, gallons);
         }
       }
@@ -669,30 +716,28 @@ export default function App() {
     };
   }
 
-  // Tornado: vary one parameter at a time, base = current scenario lambdas
-  const tornadoRuns = 2000;
+  const tornadoRuns = 4000; // seeded → can afford more runs
   const tornadoData = useMemo(() => {
-    const base  = mcWithVolumeOverride(scenarioLambdas, tornadoRuns, "base");
-    const vMin  = mcWithVolumeOverride(scenarioLambdas, tornadoRuns, "min");
-    const vMax  = mcWithVolumeOverride(scenarioLambdas, tornadoRuns, "max");
+    const base  = mcWithVolumeOverride(scenarioLambdas, tornadoRuns, "base", mulberry32(SENS_SEED + 100));
+    const vMin  = mcWithVolumeOverride(scenarioLambdas, tornadoRuns, "min",  mulberry32(SENS_SEED + 101));
+    const vMax  = mcWithVolumeOverride(scenarioLambdas, tornadoRuns, "max",  mulberry32(SENS_SEED + 102));
 
-    // Scale λ extremes: half and double
     const lambdaLow  = Object.fromEntries(modes.map(m=>[m.key,(scenarioLambdas[m.key]||0)*0.5]));
     const lambdaHigh = Object.fromEntries(modes.map(m=>[m.key,(scenarioLambdas[m.key]||0)*2.0]));
-    const lLow  = mcWithVolumeOverride(lambdaLow,  tornadoRuns, "base");
-    const lHigh = mcWithVolumeOverride(lambdaHigh, tornadoRuns, "base");
+    const lLow  = mcWithVolumeOverride(lambdaLow,  tornadoRuns, "base", mulberry32(SENS_SEED + 103));
+    const lHigh = mcWithVolumeOverride(lambdaHigh, tornadoRuns, "base", mulberry32(SENS_SEED + 104));
 
-    // RHO extremes (risk tolerance)
-    function mcRho(lambdas,runs,rhoOverride) {
+    function mcRho(lambdas,runs,rhoOverride,rng) {
+      const r = rng || mulberry32(SENS_SEED + 200);
       let totalUtility=0,totalCost=0;
-      for(let r=0;r<runs;r++){
+      for(let i=0;i<runs;i++){
         let yearCost=0;
         for(const m of modes){
-          const count=poissonSample(lambdas[m.key]||0);
+          const count=poissonSample(lambdas[m.key]||0, r);
           for(let j=0;j<count;j++){
-            const catIdx=weightedChoice(Q_MATRIX[m.key]);
+            const catIdx=weightedChoice(Q_MATRIX[m.key], r);
             const category=catIdx+1;
-            const gallons=sampleGallons(category,m.key);
+            const gallons=sampleGallons(category,m.key,r);
             yearCost+=spillCost(category,gallons);
           }
         }
@@ -701,8 +746,8 @@ export default function App() {
       }
       return {expectedCost:totalCost/runs, expectedUtility:totalUtility/runs};
     }
-    const rhoLow  = mcRho(scenarioLambdas, tornadoRuns, RHO_DOLLARS*0.1);  // very risk averse
-    const rhoHigh = mcRho(scenarioLambdas, tornadoRuns, RHO_DOLLARS*10);   // near risk neutral
+    const rhoLow  = mcRho(scenarioLambdas, tornadoRuns, RHO_DOLLARS*0.1, mulberry32(SENS_SEED + 105));
+    const rhoHigh = mcRho(scenarioLambdas, tornadoRuns, RHO_DOLLARS*10,  mulberry32(SENS_SEED + 106));
 
     const baseC = base.expectedCost;
     const rows = [
@@ -711,14 +756,14 @@ export default function App() {
       {label:"Risk tolerance ρ (×0.1 → ×10)", low:rhoLow.expectedCost,high:rhoHigh.expectedCost,base:baseC},
     ].map(r=>({
       ...r,
-      swing: r.high - r.low,
+      swing: Math.abs(r.high - r.low),
       lowDelta:  r.low  - r.base,
       highDelta: r.high - r.base,
     })).sort((a,b)=>b.swing-a.swing);
 
     return {base, vMin, vMax, lLow, lHigh, rows, baseC};
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scenarioLambdas, rerun]);
+  }, [scenarioLambdas]);
 
   return (
     <div style={{minHeight:"100vh",background:"#020617",padding:"16px 12px",color:"#e2e8f0",fontFamily:"'IBM Plex Sans',system-ui,sans-serif"}}>
@@ -745,7 +790,6 @@ export default function App() {
             </button>
           </div>
 
-          {/* Baseline window + risk badge */}
           <div style={{marginTop:10,background:"#0f172a",borderRadius:11,border:"1px solid #1e293b",padding:"10px 14px",display:"flex",flexWrap:"wrap",gap:14,alignItems:"center",justifyContent:"space-between"}}>
             <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
               <span style={{fontSize:11,color:"#94a3b8",marginRight:3}}>Baseline λ₀:</span>
@@ -769,7 +813,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Live λ₀ strip */}
           <div style={{marginTop:7,background:"#0f172a",borderRadius:9,border:"1px solid #1e293b",padding:"7px 12px",display:"flex",flexWrap:"wrap",gap:10,alignItems:"center"}}>
             <span style={{fontSize:10,color:"#64748b"}}>Active λ₀:</span>
             {modes.map(m=>(
@@ -785,7 +828,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* Tabs */}
         <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:14}}>
           {tabs.map(t=>(
             <button key={t} onClick={()=>setTab(t)} style={tab===t?TON:TOFF}>
@@ -937,14 +979,14 @@ export default function App() {
                 <table style={{width:"100%",fontSize:11,borderCollapse:"collapse"}}>
                   <thead>
                     <tr style={{borderBottom:"1px solid #1e293b"}}>
-                      {["Year","Spills","Gallons","Blockage","Pipe Fail","Pump","Hydraulic","Operational"].map(h=>(
+                      {["Year","Spills","Gallons","Blockage","Pipe Fail","Pump","Hydraulic","Operational","Unknown"].map(h=>(
                         <th key={h} style={{padding:"5px 7px",textAlign:"left",color:"#64748b",fontWeight:600,fontSize:10}}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {histDataForView.map(d=>{
-                      const mc_={B:0,F:0,P:0,H:0,O:0};
+                      const mc_={B:0,F:0,P:0,H:0,O:0,U:0};
                       d.spills.forEach(s=>{if(mc_[s.mode]!==undefined)mc_[s.mode]++;});
                       const isRecent = d.year >= CURRENT_YEAR-4;
                       return (
@@ -952,7 +994,7 @@ export default function App() {
                           <td style={{padding:"4px 7px",fontWeight:700,color:isRecent?"#7dd3fc":"#e2e8f0"}}>{d.year}{isRecent?" ★":""}</td>
                           <td style={{padding:"4px 7px",fontFamily:"'DM Mono',monospace"}}>{d.count}</td>
                           <td style={{padding:"4px 7px",fontFamily:"'DM Mono',monospace"}}>{d.totalGallons.toLocaleString()}</td>
-                          {["B","F","P","H","O"].map(m=>(
+                          {["B","F","P","H","O","U"].map(m=>(
                             <td key={m} style={{padding:"4px 7px",fontFamily:"'DM Mono',monospace",color:mc_[m]>0?MODE_COLORS[m]:"#334155"}}>{mc_[m]||"—"}</td>
                           ))}
                         </tr>
@@ -961,7 +1003,7 @@ export default function App() {
                   </tbody>
                 </table>
               </div>
-              <p style={{margin:"7px 0 0",fontSize:10,color:"#475569"}}>★ = last 5 years (Board view). 2020 = zero spills.</p>
+              <p style={{margin:"7px 0 0",fontSize:10,color:"#475569"}}>★ = last 5 years (Board view). 2020 = zero spills (removed from λ₀ denominator). U = cause not recorded (counted in totals, excluded from λ₀ rate; all in 2000–2001).</p>
             </Panel>
           </div>
         )}
@@ -997,7 +1039,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* Format guide */}
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginTop:4}}>
                 <div>
                   <h3 style={{margin:"0 0 6px",fontSize:12,fontWeight:700,color:"#e2e8f0"}}>Early format (2000–2012)</h3>
@@ -1024,7 +1065,7 @@ export default function App() {
               <div style={{marginTop:12,background:"#0f1f3d",borderRadius:8,border:"1px solid #1e3a5f",padding:"10px 12px"}}>
                 <h3 style={{margin:"0 0 6px",fontSize:12,fontWeight:700,color:"#7dd3fc"}}>Cause → Failure Mode mapping</h3>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:6,fontSize:11,color:"#94a3b8"}}>
-                  {[["Blockage (B)","Roots, Grease, Grit, Rags, FOG, Debris, or blank"],["Pipe Failure (F)","Broken, Break, Pipe, Liner, Sag, Fitting, Damage, Crack"],["Pump Failure (P)","Pump"],["Hydraulic Overload (H)","Hydraulic, I&I, Inflow"],["Operational (O)","Jetting, Operational, Operator"]].map(([mode,causes])=>(
+                  {[["Blockage (B)","Roots, Grease, Grit, Rags, FOG, Debris, Rocks, foreign objects"],["Pipe Failure (F)","Broken, Break, Pipe, Liner, Sag, Fitting, Damage, Crack, Patch, Collapse, storm/tree"],["Pump Failure (P)","Pump"],["Hydraulic Overload (H)","Hydraulic, I&I, Inflow"],["Operational (O)","Jetting, Operational, Operator"],["Unknown (U)","Blank or unrecognized cause — counted in totals, EXCLUDED from λ₀ rate"]].map(([mode,causes])=>(
                     <div key={mode}><span style={{color:"#f1f5f9",fontWeight:600}}>{mode}:</span> {causes}</div>
                   ))}
                 </div>
@@ -1037,21 +1078,21 @@ export default function App() {
                   <table style={{width:"100%",fontSize:11,borderCollapse:"collapse"}}>
                     <thead>
                       <tr style={{borderBottom:"1px solid #1e293b"}}>
-                        {["Year","Spills","Gallons","B","F","P","H","O"].map(h=>(
+                        {["Year","Spills","Gallons","B","F","P","H","O","U"].map(h=>(
                           <th key={h} style={{padding:"5px 8px",textAlign:"left",color:"#64748b",fontSize:10,fontWeight:600}}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {liveDataset.map(d=>{
-                        const mc_={B:0,F:0,P:0,H:0,O:0};
+                        const mc_={B:0,F:0,P:0,H:0,O:0,U:0};
                         d.spills.forEach(s=>{if(mc_[s.mode]!==undefined)mc_[s.mode]++;});
                         return (
                           <tr key={d.year} style={{borderBottom:"1px solid #0f172a"}}>
                             <td style={{padding:"4px 8px",fontFamily:"'DM Mono',monospace",color:"#7dd3fc",fontWeight:700}}>{d.year}</td>
                             <td style={{padding:"4px 8px",fontFamily:"'DM Mono',monospace"}}>{d.count}</td>
                             <td style={{padding:"4px 8px",fontFamily:"'DM Mono',monospace"}}>{d.totalGallons.toLocaleString()}</td>
-                            {["B","F","P","H","O"].map(m=>(
+                            {["B","F","P","H","O","U"].map(m=>(
                               <td key={m} style={{padding:"4px 8px",fontFamily:"'DM Mono',monospace",color:mc_[m]>0?MODE_COLORS[m]:"#334155"}}>{mc_[m]||"—"}</td>
                             ))}
                           </tr>
@@ -1065,10 +1106,10 @@ export default function App() {
 
             <Panel title="Embedded Dataset Summary (fallback when no upload)">
               <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10}}>
-                <Kpi title="Years" value="2000–2026" subtitle="27 years embedded" accent="#38bdf8"/>
+                <Kpi title="Years" value="2000–2026" subtitle="26.25 yr span (thru Mar 2026)" accent="#38bdf8"/>
                 <Kpi title="Total spills" value={HISTORICAL_DATA.reduce((s,d)=>s+d.count,0)} subtitle="From CAWD xlsx" accent="#f97316"/>
-                <Kpi title="Total gallons" value={`${fmt(HISTORICAL_DATA.reduce((s,d)=>s+d.totalGallons,0)/1000,0)}k`} subtitle="Cumulative" accent="#facc15"/>
-                <Kpi title="Zero-spill years" value="1 (2020)" subtitle="Excluded from λ₀ calc" accent="#22c55e"/>
+                <Kpi title="Blockage / Unknown" value={`${HISTORICAL_DATA.reduce((s,d)=>s+d.spills.filter(x=>x.mode==="B").length,0)} / ${HISTORICAL_DATA.reduce((s,d)=>s+d.spills.filter(x=>x.mode==="U").length,0)}`} subtitle="U = cause not recorded (excl. from rate)" accent="#a78bfa"/>
+                <Kpi title="λ₀ denominator" value="25.25 yr" subtitle="26.25 − 1.0 (2020 removed)" accent="#22c55e"/>
               </div>
             </Panel>
           </div>
@@ -1169,6 +1210,231 @@ export default function App() {
           </div>
         )}
 
+        {/* ══ SENSITIVITY ════════════════════════════════════════════════════ */}
+        {tab==="sensitivity" && (
+          <div style={{display:"flex",flexDirection:"column",gap:16}}>
+            <div style={{background:"#0f1f3d",borderRadius:10,border:"1px solid #1e3a5f",padding:"10px 14px"}}>
+              <p style={{margin:0,fontSize:12,color:"#cbd5e1",lineHeight:1.6}}>
+                These three analyses are <strong style={{color:"#7dd3fc"}}>seeded</strong> (fixed RNG, {MC_SENS_RUNS.toLocaleString()} runs/point) so the
+                numbers are reproducible — the board sees the same result on every load, and the "Re-run MC"
+                button does not perturb them. Baseline λ₀ window: <strong style={{color:"#7dd3fc"}}>{baselineLabel}</strong>.
+              </p>
+            </div>
+
+            {/* ── SA1: Budget Sweep ── */}
+            <Panel title="① Budget Threshold — When does a second lever enter the solution?">
+              <div style={{display:"flex",flexWrap:"wrap",gap:10,alignItems:"center",marginBottom:12}}>
+                <NInput label="Sweep up to ($100K units)" value={sensBudgetMax} step={1}
+                  onChange={v=>setSensBudgetMax(Math.max(2,Math.min(40,Math.round(v))))}/>
+                {budgetThreshold ? (
+                  <div style={{padding:"6px 14px",borderRadius:8,background:"#0f2b1f",border:"1px solid #22c55e",fontSize:12,color:"#22c55e",fontWeight:700}}>
+                    First non-maintenance lever ({levers.find(l=>l.key===budgetThreshold.entrant)?.short}) enters at <strong>${(budgetThreshold.budget*100).toFixed(0)}K</strong> (budget = {budgetThreshold.budget} units)
+                    &nbsp;— I1={budgetThreshold.I1}, I2={budgetThreshold.I2}, I3={budgetThreshold.I3}, I4={budgetThreshold.I4}
+                  </div>
+                ) : (
+                  <div style={{padding:"6px 14px",borderRadius:8,background:"#0f2b1f",border:"1px solid #22c55e",fontSize:12,color:"#22c55e",fontWeight:700}}>
+                    100% Preventive Maintenance across the entire ${sensBudgetMax*100}K sweep — no second lever clears {ENTRY_THRESHOLD} units
+                  </div>
+                )}
+              </div>
+
+              {/* Where does the $1M proposal sit? */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:10,marginBottom:12}}>
+                {(() => {
+                  const at10 = budgetSweep.find(r => Math.abs(r.budget - 10) < 1e-6);
+                  return (
+                    <>
+                      <Kpi title="At $1M (10 units)" value={at10 ? `I1=${at10.I1}` : "—"}
+                        subtitle={at10 ? `I2=${at10.I2} I3=${at10.I3} I4=${at10.I4}` : ""} accent="#38bdf8"/>
+                      <Kpi title="Threshold for diversification"
+                        value={budgetThreshold ? `$${(budgetThreshold.budget*100).toFixed(0)}K` : `>$${sensBudgetMax*100}K`}
+                        subtitle={budgetThreshold ? "Second lever enters here" : "Beyond sweep range"} accent="#facc15"/>
+                      <Kpi title="$1M proposal status"
+                        value={(!budgetThreshold || 10 < budgetThreshold.budget) ? "All-in I1 ✓" : "Diversified"}
+                        subtitle={(!budgetThreshold || 10 < budgetThreshold.budget) ? "Below threshold → 100% maintenance" : "Above threshold"}
+                        accent="#22c55e"/>
+                    </>
+                  );
+                })()}
+              </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+                <ChartCard title="Investment Allocation by Budget">
+                  <ResponsiveContainer width="100%" height={240}>
+                    <LineChart data={budgetSweep}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                      <XAxis dataKey="budgetDollars" stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}}
+                        label={{value:"Budget ($K)",position:"insideBottom",offset:-4,fill:"#64748b",fontSize:10}}/>
+                      <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}}
+                        label={{value:"Units",angle:-90,position:"insideLeft",fill:"#64748b",fontSize:10}}/>
+                      <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}
+                        labelFormatter={v=>`Budget: $${v}K`}/>
+                      <Legend wrapperStyle={{fontSize:10}}/>
+                      {/* $1M proposal marker */}
+                      <ReferenceLine x={1000} stroke="#f1f5f9" strokeDasharray="4 4"
+                        label={{value:"$1M proposal",fill:"#f1f5f9",fontSize:9,position:"top"}}/>
+                      {budgetThreshold && (
+                        <ReferenceLine x={budgetThreshold.budget*100} stroke="#facc15" strokeDasharray="4 4"
+                          label={{value:"diversify",fill:"#facc15",fontSize:9,position:"top"}}/>
+                      )}
+                      <Line type="monotone" dataKey="I1" name="Preventive Maint." stroke="#38bdf8" strokeWidth={2} dot={false}/>
+                      <Line type="monotone" dataKey="I2" name="Workforce"          stroke="#22c55e" strokeWidth={2} dot={false}/>
+                      <Line type="monotone" dataKey="I3" name="Execution"          stroke="#f97316" strokeWidth={2} dot={false}/>
+                      <Line type="monotone" dataKey="I4" name="Targeting"          stroke="#a78bfa" strokeWidth={2} dot={false}/>
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+                <ChartCard title="E[U] Improvement by Budget">
+                  <ResponsiveContainer width="100%" height={240}>
+                    <LineChart data={budgetSweep}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                      <XAxis dataKey="budgetDollars" stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}}
+                        label={{value:"Budget ($K)",position:"insideBottom",offset:-4,fill:"#64748b",fontSize:10}}/>
+                      <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}}/>
+                      <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}
+                        labelFormatter={v=>`Budget: $${v}K`}/>
+                      <ReferenceLine x={1000} stroke="#f1f5f9" strokeDasharray="4 4"/>
+                      <Line type="monotone" dataKey="eu" name="E[U]" stroke="#facc15" strokeWidth={2} dot={false}/>
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+              </div>
+              <p style={{margin:"8px 0 0",fontSize:10,color:"#475569"}}>
+                A lever counts as "entered" only when it holds ≥ {ENTRY_THRESHOLD} units (${(ENTRY_THRESHOLD*100).toFixed(0)}K) for ≥ {PERSIST_STEPS} consecutive
+                budget steps — this filters Monte-Carlo noise so a single jittery step doesn't read as diversification.
+                The white dashed line marks the $1M proposal.
+              </p>
+            </Panel>
+
+            {/* ── SA2: I1 Cap ── */}
+            <Panel title="② Maintenance Cap — What happens if we can only put a limited amount into preventive maintenance?">
+              <div style={{display:"flex",flexWrap:"wrap",gap:12,alignItems:"center",marginBottom:12}}>
+                <NInput label="Max I1 (Preventive Maint.) units" value={sensI1Cap} step={0.25}
+                  onChange={v=>setSensI1Cap(Math.max(0,v))}/>
+                <div style={{fontSize:12,color:"#94a3b8"}}>Budget: {budget} units (${(budget*100).toFixed(0)}K)</div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10,marginBottom:12}}>
+                <Kpi title="Unconstrained E[spills]" value={fmt(seededOptLambda,3)}
+                  subtitle="No cap on I1 (seeded)" accent="#38bdf8"/>
+                <Kpi title="Capped E[spills]" value={fmt(cappedLambda,3)}
+                  subtitle={`I1 ≤ ${sensI1Cap} units`} accent="#f97316"/>
+                <Kpi title="Cost of constraint" value={`+${fmt(cappedLambda-seededOptLambda,3)} spills/yr`}
+                  subtitle="Additional expected spills" accent="#ef4444"/>
+                <Kpi title="Capped E[U]" value={fmt(cappedOpt.finalEU,4)}
+                  subtitle={`vs unconstrained ${fmt(seededOpt.finalEU,4)}`} accent="#facc15"/>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+                <ChartCard title="Unconstrained Optimal Allocation">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={levers.map(l=>({lever:l.short,units:seededOpt.investment[l.key]}))}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                      <XAxis dataKey="lever" stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                      <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                      <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}/>
+                      <Bar dataKey="units" name="Units allocated" fill="#38bdf8" radius={[3,3,0,0]}/>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+                <ChartCard title={`Capped Allocation (I1 ≤ ${sensI1Cap} units)`}>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={levers.map(l=>({lever:l.short,units:cappedOpt.investment[l.key],cap:l.key==="I1"?sensI1Cap:undefined}))}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                      <XAxis dataKey="lever" stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                      <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                      <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}/>
+                      <Bar dataKey="units" name="Units allocated" radius={[3,3,0,0]}>
+                        {levers.map(l=>(
+                          <Cell key={l.key} fill={l.key==="I1"?"#ef4444":"#f97316"}/>
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <p style={{margin:"6px 0 0",fontSize:10,color:"#475569"}}>Red = constrained lever. Model redirects remaining budget to next best lever.</p>
+                </ChartCard>
+              </div>
+            </Panel>
+
+            {/* ── SA3: Tornado / Volume Extremes ── */}
+            <Panel title="③ Tornado — How do extreme assumptions change expected annual cost?">
+              <p style={{margin:"0 0 12px",fontSize:12,color:"#94a3b8",lineHeight:1.6}}>
+                Each row varies one input from its minimum to maximum extreme while holding everything else at the base scenario.
+                Bar width = total swing in expected annual cost. Base = {fmtDollars(tornadoData.baseC)}.
+              </p>
+
+              <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:14,flexWrap:"wrap"}}>
+                <span style={{fontSize:11,color:"#94a3b8"}}>Volume scenario preview:</span>
+                {[["min","All spills at minimum volume"],["base","Historical distribution (base)"],["max","All spills at maximum volume"]].map(([k,label])=>(
+                  <button key={k} onClick={()=>setSensVolScenario(k)}
+                    style={sensVolScenario===k?{...TON,background:"#38bdf8",color:"#0f172a"}:TOFF}>{label}</button>
+                ))}
+              </div>
+
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(175px,1fr))",gap:10,marginBottom:14}}>
+                <Kpi title="Min volume E[cost]" value={fmtDollars(tornadoData.vMin.expectedCost)}
+                  subtitle="All spills at category floor" accent="#22c55e"/>
+                <Kpi title="Base E[cost]" value={fmtDollars(tornadoData.base.expectedCost)}
+                  subtitle="Historical volume distribution" accent="#38bdf8"/>
+                <Kpi title="Max volume E[cost]" value={fmtDollars(tornadoData.vMax.expectedCost)}
+                  subtitle="All spills at category ceiling" accent="#ef4444"/>
+                <Kpi title="Volume swing" value={fmtDollars(tornadoData.vMax.expectedCost - tornadoData.vMin.expectedCost)}
+                  subtitle="Max − Min expected cost" accent="#f97316"/>
+              </div>
+
+              <ChartCard title="Tornado Diagram — Swing in Expected Annual Cost">
+                <p style={{margin:"0 0 10px",fontSize:11,color:"#64748b"}}>
+                  Each bar shows how much expected annual cost changes from base when the variable is at its low (left) or high (right) extreme.
+                </p>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {tornadoData.rows.map((row,i)=>{
+                    const maxSwing = Math.max(...tornadoData.rows.map(r=>r.swing));
+                    const scaleW = (v) => `${Math.abs(v)/maxSwing*45}%`;
+                    return (
+                      <div key={i}>
+                        <div style={{fontSize:11,color:"#94a3b8",marginBottom:3}}>{row.label}</div>
+                        <div style={{display:"flex",alignItems:"center",gap:4}}>
+                          <div style={{width:"45%",display:"flex",justifyContent:"flex-end"}}>
+                            <div style={{
+                              width: scaleW(row.lowDelta),
+                              minWidth:2,
+                              background: row.lowDelta < 0 ? "#22c55e" : "#ef4444",
+                              height:22,borderRadius:"4px 0 0 4px",
+                              display:"flex",alignItems:"center",justifyContent:"flex-end",
+                              paddingRight:4,fontSize:9,color:"#f1f5f9",fontFamily:"'DM Mono',monospace"
+                            }}>
+                              {fmtDollars(row.low)}
+                            </div>
+                          </div>
+                          <div style={{width:2,height:28,background:"#475569"}}/>
+                          <div style={{width:"45%",display:"flex",justifyContent:"flex-start"}}>
+                            <div style={{
+                              width: scaleW(row.highDelta),
+                              minWidth:2,
+                              background: row.highDelta > 0 ? "#ef4444" : "#22c55e",
+                              height:22,borderRadius:"0 4px 4px 0",
+                              display:"flex",alignItems:"center",
+                              paddingLeft:4,fontSize:9,color:"#f1f5f9",fontFamily:"'DM Mono',monospace"
+                            }}>
+                              {fmtDollars(row.high)}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{fontSize:9,color:"#475569",marginTop:2}}>
+                          Swing: {fmtDollars(row.swing)} &nbsp;|&nbsp; Base: {fmtDollars(row.base)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p style={{margin:"12px 0 0",fontSize:10,color:"#475569"}}>
+                  Green = reduces cost vs base · Red = increases cost vs base.
+                  Failure rate (λ) extremes: ×0.5 (optimistic) and ×2.0 (pessimistic).
+                  Risk tolerance (ρ) extremes: ×0.1 (very risk averse) and ×10 (near risk neutral) — affects utility, not raw cost.
+                </p>
+              </ChartCard>
+            </Panel>
+          </div>
+        )}
+
         {/* ══ INPUTS ═════════════════════════════════════════════════════════ */}
         {tab==="inputs" && (
           <div style={{display:"flex",flexDirection:"column",gap:14}}>
@@ -1232,204 +1498,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ══ SENSITIVITY ════════════════════════════════════════════════════ */}
-        {tab==="sensitivity" && (
-          <div style={{display:"flex",flexDirection:"column",gap:16}}>
-            <p style={{margin:0,fontSize:12,color:"#64748b"}}>
-              Three sensitivity analyses exploring how the optimizer and expected costs respond to extreme assumptions.
-              All use the current baseline λ₀ window: <strong style={{color:"#7dd3fc"}}>{baselineLabel}</strong>.
-            </p>
-
-            {/* ── SA1: Budget Sweep ── */}
-            <Panel title="① Budget Threshold — When does a second lever enter the solution?">
-              <div style={{display:"flex",flexWrap:"wrap",gap:10,alignItems:"center",marginBottom:12}}>
-                <NInput label="Sweep up to ($100K units)" value={sensBudgetMax} step={1}
-                  onChange={v=>setSensBudgetMax(Math.max(2,Math.min(40,Math.round(v))))}/>
-                {budgetThreshold ? (
-                  <div style={{padding:"6px 14px",borderRadius:8,background:"#0f2b1f",border:"1px solid #22c55e",fontSize:12,color:"#22c55e",fontWeight:700}}>
-                    Second lever enters at <strong>${(budgetThreshold.budget*100).toFixed(0)}K</strong> (budget = {budgetThreshold.budget} units)
-                    &nbsp;— I1={budgetThreshold.I1}, I2={budgetThreshold.I2}, I3={budgetThreshold.I3}, I4={budgetThreshold.I4}
-                  </div>
-                ) : (
-                  <div style={{padding:"6px 14px",borderRadius:8,background:"#1e293b",fontSize:12,color:"#94a3b8"}}>
-                    Only one lever used across entire sweep range
-                  </div>
-                )}
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
-                <ChartCard title="Investment Allocation by Budget">
-                  <ResponsiveContainer width="100%" height={240}>
-                    <LineChart data={budgetSweep}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
-                      <XAxis dataKey="budgetDollars" stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}}
-                        label={{value:"Budget ($K)",position:"insideBottom",offset:-4,fill:"#64748b",fontSize:10}}/>
-                      <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}}
-                        label={{value:"Units",angle:-90,position:"insideLeft",fill:"#64748b",fontSize:10}}/>
-                      <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}
-                        labelFormatter={v=>`Budget: $${v}K`}/>
-                      <Legend wrapperStyle={{fontSize:10}}/>
-                      <Line type="monotone" dataKey="I1" name="Preventive Maint." stroke="#38bdf8" strokeWidth={2} dot={false}/>
-                      <Line type="monotone" dataKey="I2" name="Workforce"          stroke="#22c55e" strokeWidth={2} dot={false}/>
-                      <Line type="monotone" dataKey="I3" name="Execution"          stroke="#f97316" strokeWidth={2} dot={false}/>
-                      <Line type="monotone" dataKey="I4" name="Targeting"          stroke="#a78bfa" strokeWidth={2} dot={false}/>
-                    </LineChart>
-                  </ResponsiveContainer>
-                </ChartCard>
-                <ChartCard title="E[U] Improvement by Budget">
-                  <ResponsiveContainer width="100%" height={240}>
-                    <LineChart data={budgetSweep}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
-                      <XAxis dataKey="budgetDollars" stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}}
-                        label={{value:"Budget ($K)",position:"insideBottom",offset:-4,fill:"#64748b",fontSize:10}}/>
-                      <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}}/>
-                      <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}
-                        labelFormatter={v=>`Budget: $${v}K`}/>
-                      <Line type="monotone" dataKey="eu" name="E[U]" stroke="#facc15" strokeWidth={2} dot={false}/>
-                    </LineChart>
-                  </ResponsiveContainer>
-                </ChartCard>
-              </div>
-              <p style={{margin:"8px 0 0",fontSize:10,color:"#475569"}}>
-                The left chart shows which levers the optimizer allocates to as budget grows.
-                The inflection point where a new lever enters is the budget threshold for diversification.
-              </p>
-            </Panel>
-
-            {/* ── SA2: I1 Cap ── */}
-            <Panel title="② Maintenance Cap — What happens if we can only put a limited amount into preventive maintenance?">
-              <div style={{display:"flex",flexWrap:"wrap",gap:12,alignItems:"center",marginBottom:12}}>
-                <NInput label="Max I1 (Preventive Maint.) units" value={sensI1Cap} step={0.25}
-                  onChange={v=>setSensI1Cap(Math.max(0,v))}/>
-                <div style={{fontSize:12,color:"#94a3b8"}}>Budget: {budget} units (${(budget*100).toFixed(0)}K)</div>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10,marginBottom:12}}>
-                <Kpi title="Unconstrained E[spills]" value={fmt(optLambda,3)}
-                  subtitle="No cap on I1" accent="#38bdf8"/>
-                <Kpi title="Capped E[spills]" value={fmt(cappedLambda,3)}
-                  subtitle={`I1 ≤ ${sensI1Cap} units`} accent="#f97316"/>
-                <Kpi title="Cost of constraint" value={`+${fmt(cappedLambda-optLambda,3)} spills/yr`}
-                  subtitle="Additional expected spills" accent="#ef4444"/>
-                <Kpi title="Capped E[U]" value={fmt(cappedOpt.finalEU,4)}
-                  subtitle={`vs unconstrained ${fmt(optimized.finalEU,4)}`} accent="#facc15"/>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
-                <ChartCard title="Unconstrained Optimal Allocation">
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={levers.map(l=>({lever:l.short,units:optimized.investment[l.key]}))}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
-                      <XAxis dataKey="lever" stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
-                      <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
-                      <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}/>
-                      <Bar dataKey="units" name="Units allocated" fill="#38bdf8" radius={[3,3,0,0]}/>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartCard>
-                <ChartCard title={`Capped Allocation (I1 ≤ ${sensI1Cap} units)`}>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={levers.map(l=>({lever:l.short,units:cappedOpt.investment[l.key],cap:l.key==="I1"?sensI1Cap:undefined}))}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
-                      <XAxis dataKey="lever" stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
-                      <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
-                      <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}/>
-                      <Bar dataKey="units" name="Units allocated" radius={[3,3,0,0]}>
-                        {levers.map(l=>(
-                          <Cell key={l.key} fill={l.key==="I1"?"#ef4444":"#f97316"}/>
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                  <p style={{margin:"6px 0 0",fontSize:10,color:"#475569"}}>Red = constrained lever. Model redirects remaining budget to next best lever.</p>
-                </ChartCard>
-              </div>
-            </Panel>
-
-            {/* ── SA3: Tornado / Volume Extremes ── */}
-            <Panel title="③ Tornado — How do extreme assumptions change expected annual cost?">
-              <p style={{margin:"0 0 12px",fontSize:12,color:"#94a3b8",lineHeight:1.6}}>
-                Each row varies one input from its minimum to maximum extreme while holding everything else at the base scenario.
-                Bar width = total swing in expected annual cost. Base = ${fmtDollars(tornadoData.baseC)}.
-              </p>
-
-              {/* Volume scenario selector */}
-              <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:14,flexWrap:"wrap"}}>
-                <span style={{fontSize:11,color:"#94a3b8"}}>Volume scenario preview:</span>
-                {[["min","All spills at minimum volume"],["base","Historical distribution (base)"],["max","All spills at maximum volume"]].map(([k,label])=>(
-                  <button key={k} onClick={()=>setSensVolScenario(k)}
-                    style={sensVolScenario===k?{...TON,background:"#38bdf8",color:"#0f172a"}:TOFF}>{label}</button>
-                ))}
-              </div>
-
-              {/* Volume scenario KPIs */}
-              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(175px,1fr))",gap:10,marginBottom:14}}>
-                <Kpi title="Min volume E[cost]" value={fmtDollars(tornadoData.vMin.expectedCost)}
-                  subtitle="All spills at category floor" accent="#22c55e"/>
-                <Kpi title="Base E[cost]" value={fmtDollars(tornadoData.base.expectedCost)}
-                  subtitle="Historical volume distribution" accent="#38bdf8"/>
-                <Kpi title="Max volume E[cost]" value={fmtDollars(tornadoData.vMax.expectedCost)}
-                  subtitle="All spills at category ceiling" accent="#ef4444"/>
-                <Kpi title="Volume swing" value={fmtDollars(tornadoData.vMax.expectedCost - tornadoData.vMin.expectedCost)}
-                  subtitle="Max − Min expected cost" accent="#f97316"/>
-              </div>
-
-              {/* Tornado chart */}
-              <ChartCard title="Tornado Diagram — Swing in Expected Annual Cost">
-                <p style={{margin:"0 0 10px",fontSize:11,color:"#64748b"}}>
-                  Each bar shows how much expected annual cost changes from base when the variable is at its low (left) or high (right) extreme.
-                </p>
-                <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  {tornadoData.rows.map((row,i)=>{
-                    const maxSwing = Math.max(...tornadoData.rows.map(r=>r.swing));
-                    const scaleW = (v) => `${Math.abs(v)/maxSwing*45}%`;
-                    return (
-                      <div key={i}>
-                        <div style={{fontSize:11,color:"#94a3b8",marginBottom:3}}>{row.label}</div>
-                        <div style={{display:"flex",alignItems:"center",gap:4}}>
-                          {/* Low side — left */}
-                          <div style={{width:"45%",display:"flex",justifyContent:"flex-end"}}>
-                            <div style={{
-                              width: scaleW(row.lowDelta),
-                              minWidth:2,
-                              background: row.lowDelta < 0 ? "#22c55e" : "#ef4444",
-                              height:22,borderRadius:"4px 0 0 4px",
-                              display:"flex",alignItems:"center",justifyContent:"flex-end",
-                              paddingRight:4,fontSize:9,color:"#f1f5f9",fontFamily:"'DM Mono',monospace"
-                            }}>
-                              {fmtDollars(row.low)}
-                            </div>
-                          </div>
-                          {/* Center baseline */}
-                          <div style={{width:2,height:28,background:"#475569"}}/>
-                          {/* High side — right */}
-                          <div style={{width:"45%",display:"flex",justifyContent:"flex-start"}}>
-                            <div style={{
-                              width: scaleW(row.highDelta),
-                              minWidth:2,
-                              background: row.highDelta > 0 ? "#ef4444" : "#22c55e",
-                              height:22,borderRadius:"0 4px 4px 0",
-                              display:"flex",alignItems:"center",
-                              paddingLeft:4,fontSize:9,color:"#f1f5f9",fontFamily:"'DM Mono',monospace"
-                            }}>
-                              {fmtDollars(row.high)}
-                            </div>
-                          </div>
-                        </div>
-                        <div style={{fontSize:9,color:"#475569",marginTop:2}}>
-                          Swing: {fmtDollars(row.swing)} &nbsp;|&nbsp; Base: {fmtDollars(row.base)}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <p style={{margin:"12px 0 0",fontSize:10,color:"#475569"}}>
-                  Green = reduces cost vs base · Red = increases cost vs base.
-                  Failure rate (λ) extremes: ×0.5 (optimistic) and ×2.0 (pessimistic).
-                  Risk tolerance (ρ) extremes: ×0.1 (very risk averse) and ×10 (near risk neutral) — affects utility, not raw cost.
-                </p>
-              </ChartCard>
-            </Panel>
-          </div>
-        )}
-
         {/* ══ MODEL ══════════════════════════════════════════════════════════ */}
         {tab==="model" && (
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
@@ -1443,7 +1511,7 @@ export default function App() {
                 <p style={{margin:0}}><strong>C = spill_cost(cat, gallons)</strong> — fixed O&M + per-gal fine</p>
                 <p style={{margin:0}}><strong>U(−C) = 1−exp(C/ρ)</strong> — expected_utility(), ρ=${fmt(RHO_DOLLARS/1e6,0)}M, clip at 50</p>
                 <p style={{margin:0,color:"#22c55e"}}><strong>max E[U] s.t. Σc<sub>i</sub>I<sub>i</sub>≤B</strong> — objective_value()</p>
-                <p style={{margin:0}}><strong>λ<sub>k0</sub> window:</strong> observed/years × 100/77.57 miles</p>
+                <p style={{margin:0}}><strong>λ<sub>k0</sub> window:</strong> cause-attributed events / elapsed yrs × 100/77.57 mi (2020 yr removed; Unknown excluded; 2026 = ¼ yr)</p>
               </div>
             </Panel>
             <Panel title="q Matrix & SAM">
