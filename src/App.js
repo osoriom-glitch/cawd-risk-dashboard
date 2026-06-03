@@ -568,7 +568,157 @@ export default function App() {
     e.target.value = "";
   }
 
-  const tabs = ["dashboard","historical","data","cost","optimizer","inputs","model"];
+  const tabs = ["dashboard","historical","data","cost","optimizer","sensitivity","inputs","model"];
+
+  // ── Sensitivity Analysis state ───────────────────────────────────────────
+  const [sensBudgetMax,   setSensBudgetMax]   = useState(20);   // max budget to sweep ($100K units)
+  const [sensI1Cap,       setSensI1Cap]       = useState(3);    // max units allowed in I1
+  const [sensVolScenario, setSensVolScenario] = useState("base"); // "min"|"base"|"max"
+
+  // SA1: Budget sweep — run optimizer at each budget level, record allocation & E[U]
+  const budgetSweep = useMemo(() => {
+    const results = [];
+    for (let b = 0.25; b <= sensBudgetMax; b += 0.25) {
+      const opt = greedyOptimize(lambda0, alpha, costs, b);
+      results.push({
+        budget: +b.toFixed(2),
+        budgetDollars: +(b * 100).toFixed(0),
+        eu: +opt.finalEU.toFixed(4),
+        I1: +opt.investment.I1.toFixed(2),
+        I2: +opt.investment.I2.toFixed(2),
+        I3: +opt.investment.I3.toFixed(2),
+        I4: +opt.investment.I4.toFixed(2),
+        lambda: +sumValues(computeLambdas(lambda0, alpha, opt.investment)).toFixed(3),
+      });
+    }
+    return results;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lambda0, alpha, costs, sensBudgetMax, rerun]);
+
+  // Find threshold where a second lever first gets any allocation
+  const budgetThreshold = useMemo(() => {
+    for (const r of budgetSweep) {
+      const nonZero = [r.I1,r.I2,r.I3,r.I4].filter(v=>v>0).length;
+      if (nonZero >= 2) return r;
+    }
+    return null;
+  }, [budgetSweep]);
+
+  // SA2: I1 cap — greedy optimizer with I1 capped at sensI1Cap
+  function greedyOptimizeCapped(lambda0, alpha, costs, budget, capI1, step=0.25) {
+    const inv = {I1:0,I2:0,I3:0,I4:0};
+    let remaining = budget;
+    let currentEU = euFor(lambda0, alpha, inv, MC_OPT_RUNS);
+    let t = 0;
+    while (remaining >= step && t < 1000) {
+      let bestLever=null, bestEU=-Infinity;
+      for (const lever of levers) {
+        const cost = costs[lever.key]||1;
+        if (cost*step > remaining) continue;
+        if (lever.key==="I1" && inv.I1+step > capI1) continue; // cap
+        const trial = {...inv,[lever.key]:inv[lever.key]+step};
+        const trialEU = euFor(lambda0,alpha,trial,MC_OPT_RUNS);
+        if (trialEU>bestEU){bestEU=trialEU;bestLever=lever.key;}
+      }
+      if (!bestLever||bestEU<=currentEU) break;
+      inv[bestLever]+=step;
+      remaining-=(costs[bestLever]||1)*step;
+      currentEU=bestEU; t++;
+    }
+    return {investment:inv,remaining,finalEU:currentEU};
+  }
+
+  const cappedOpt = useMemo(() =>
+    greedyOptimizeCapped(lambda0, alpha, costs, budget, sensI1Cap),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  [lambda0, alpha, costs, budget, sensI1Cap, rerun]);
+
+  const cappedLambda = sumValues(computeLambdas(lambda0, alpha, cappedOpt.investment));
+
+  // SA3: Tornado diagram — vary each input ±extreme, measure impact on E[expected cost]
+  // For volume: override sampleGallons to always return min or max per category
+  function mcWithVolumeOverride(lambdas, runs, volMode) {
+    // volMode: "min" = always use minimum historical volume per cat
+    //          "max" = always use maximum historical volume per cat
+    //          "base" = normal sampling
+    const CAT_MIN = {1:50,   2:1001, 3:50,  4:1};
+    const CAT_MAX = {1:145000,2:50000,3:1000,4:49};
+    let totalCost = 0, totalUtility = 0, cntOver1M = 0;
+    for (let r = 0; r < runs; r++) {
+      let yearCost = 0;
+      for (const m of modes) {
+        const count = poissonSample(lambdas[m.key]||0);
+        for (let j = 0; j < count; j++) {
+          const catIdx = weightedChoice(Q_MATRIX[m.key]);
+          const category = catIdx+1;
+          let gallons;
+          if      (volMode==="min") gallons = CAT_MIN[category];
+          else if (volMode==="max") gallons = CAT_MAX[category];
+          else                      gallons = sampleGallons(category, m.key);
+          yearCost += spillCost(category, gallons);
+        }
+      }
+      totalCost    += yearCost;
+      totalUtility += expUtility(yearCost);
+      if (yearCost > 1000000) cntOver1M++;
+    }
+    return {
+      expectedCost:    totalCost    / runs,
+      expectedUtility: totalUtility / runs,
+      pCostOver1M:     cntOver1M    / runs,
+    };
+  }
+
+  // Tornado: vary one parameter at a time, base = current scenario lambdas
+  const tornadoRuns = 2000;
+  const tornadoData = useMemo(() => {
+    const base  = mcWithVolumeOverride(scenarioLambdas, tornadoRuns, "base");
+    const vMin  = mcWithVolumeOverride(scenarioLambdas, tornadoRuns, "min");
+    const vMax  = mcWithVolumeOverride(scenarioLambdas, tornadoRuns, "max");
+
+    // Scale λ extremes: half and double
+    const lambdaLow  = Object.fromEntries(modes.map(m=>[m.key,(scenarioLambdas[m.key]||0)*0.5]));
+    const lambdaHigh = Object.fromEntries(modes.map(m=>[m.key,(scenarioLambdas[m.key]||0)*2.0]));
+    const lLow  = mcWithVolumeOverride(lambdaLow,  tornadoRuns, "base");
+    const lHigh = mcWithVolumeOverride(lambdaHigh, tornadoRuns, "base");
+
+    // RHO extremes (risk tolerance)
+    function mcRho(lambdas,runs,rhoOverride) {
+      let totalUtility=0,totalCost=0;
+      for(let r=0;r<runs;r++){
+        let yearCost=0;
+        for(const m of modes){
+          const count=poissonSample(lambdas[m.key]||0);
+          for(let j=0;j<count;j++){
+            const catIdx=weightedChoice(Q_MATRIX[m.key]);
+            const category=catIdx+1;
+            const gallons=sampleGallons(category,m.key);
+            yearCost+=spillCost(category,gallons);
+          }
+        }
+        totalCost+=yearCost;
+        totalUtility+=(1-Math.exp(Math.min(yearCost/rhoOverride,50)));
+      }
+      return {expectedCost:totalCost/runs, expectedUtility:totalUtility/runs};
+    }
+    const rhoLow  = mcRho(scenarioLambdas, tornadoRuns, RHO_DOLLARS*0.1);  // very risk averse
+    const rhoHigh = mcRho(scenarioLambdas, tornadoRuns, RHO_DOLLARS*10);   // near risk neutral
+
+    const baseC = base.expectedCost;
+    const rows = [
+      {label:"Spill volume (min→max)",        low:vMin.expectedCost,  high:vMax.expectedCost,  base:baseC},
+      {label:"Failure rate λ (×0.5 → ×2)",    low:lLow.expectedCost,  high:lHigh.expectedCost, base:baseC},
+      {label:"Risk tolerance ρ (×0.1 → ×10)", low:rhoLow.expectedCost,high:rhoHigh.expectedCost,base:baseC},
+    ].map(r=>({
+      ...r,
+      swing: r.high - r.low,
+      lowDelta:  r.low  - r.base,
+      highDelta: r.high - r.base,
+    })).sort((a,b)=>b.swing-a.swing);
+
+    return {base, vMin, vMax, lLow, lHigh, rows, baseC};
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scenarioLambdas, rerun]);
 
   return (
     <div style={{minHeight:"100vh",background:"#020617",padding:"16px 12px",color:"#e2e8f0",fontFamily:"'IBM Plex Sans',system-ui,sans-serif"}}>
@@ -586,7 +736,7 @@ export default function App() {
                 {liveDataset && <span style={{color:"#22c55e",marginLeft:8}}>· uploaded dataset active</span>}
               </p>
               <span style={{display:"inline-block",marginTop:3,borderRadius:20,background:"#1e3a5f",padding:"2px 10px",fontSize:10,fontWeight:700,color:"#7dd3fc"}}>
-                Stanford MS&E 250B · Spring 2026 · Annabelle · Khang · Ramesh · Maura Osorio
+                Stanford MS&E 250B · Spring 2026 · Annabelle Jayadinata· Khang Do · Ramesh Manian · Maura Osorio
               </span>
             </div>
             <button onClick={()=>setRerun(x=>x+1)}
@@ -1079,6 +1229,204 @@ export default function App() {
                 <p style={{margin:"6px 0 0",fontSize:10,color:"#475569"}}>P/I1=0.000: PM has no effect on pump-station failures per Formulas_. All other values from Formulas_ alpha_matrix exactly.</p>
               </Panel>
             </div>
+          </div>
+        )}
+
+        {/* ══ SENSITIVITY ════════════════════════════════════════════════════ */}
+        {tab==="sensitivity" && (
+          <div style={{display:"flex",flexDirection:"column",gap:16}}>
+            <p style={{margin:0,fontSize:12,color:"#64748b"}}>
+              Three sensitivity analyses exploring how the optimizer and expected costs respond to extreme assumptions.
+              All use the current baseline λ₀ window: <strong style={{color:"#7dd3fc"}}>{baselineLabel}</strong>.
+            </p>
+
+            {/* ── SA1: Budget Sweep ── */}
+            <Panel title="① Budget Threshold — When does a second lever enter the solution?">
+              <div style={{display:"flex",flexWrap:"wrap",gap:10,alignItems:"center",marginBottom:12}}>
+                <NInput label="Sweep up to ($100K units)" value={sensBudgetMax} step={1}
+                  onChange={v=>setSensBudgetMax(Math.max(2,Math.min(40,Math.round(v))))}/>
+                {budgetThreshold ? (
+                  <div style={{padding:"6px 14px",borderRadius:8,background:"#0f2b1f",border:"1px solid #22c55e",fontSize:12,color:"#22c55e",fontWeight:700}}>
+                    Second lever enters at <strong>${(budgetThreshold.budget*100).toFixed(0)}K</strong> (budget = {budgetThreshold.budget} units)
+                    &nbsp;— I1={budgetThreshold.I1}, I2={budgetThreshold.I2}, I3={budgetThreshold.I3}, I4={budgetThreshold.I4}
+                  </div>
+                ) : (
+                  <div style={{padding:"6px 14px",borderRadius:8,background:"#1e293b",fontSize:12,color:"#94a3b8"}}>
+                    Only one lever used across entire sweep range
+                  </div>
+                )}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+                <ChartCard title="Investment Allocation by Budget">
+                  <ResponsiveContainer width="100%" height={240}>
+                    <LineChart data={budgetSweep}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                      <XAxis dataKey="budgetDollars" stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}}
+                        label={{value:"Budget ($K)",position:"insideBottom",offset:-4,fill:"#64748b",fontSize:10}}/>
+                      <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}}
+                        label={{value:"Units",angle:-90,position:"insideLeft",fill:"#64748b",fontSize:10}}/>
+                      <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}
+                        labelFormatter={v=>`Budget: $${v}K`}/>
+                      <Legend wrapperStyle={{fontSize:10}}/>
+                      <Line type="monotone" dataKey="I1" name="Preventive Maint." stroke="#38bdf8" strokeWidth={2} dot={false}/>
+                      <Line type="monotone" dataKey="I2" name="Workforce"          stroke="#22c55e" strokeWidth={2} dot={false}/>
+                      <Line type="monotone" dataKey="I3" name="Execution"          stroke="#f97316" strokeWidth={2} dot={false}/>
+                      <Line type="monotone" dataKey="I4" name="Targeting"          stroke="#a78bfa" strokeWidth={2} dot={false}/>
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+                <ChartCard title="E[U] Improvement by Budget">
+                  <ResponsiveContainer width="100%" height={240}>
+                    <LineChart data={budgetSweep}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                      <XAxis dataKey="budgetDollars" stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}}
+                        label={{value:"Budget ($K)",position:"insideBottom",offset:-4,fill:"#64748b",fontSize:10}}/>
+                      <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:10}}/>
+                      <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}
+                        labelFormatter={v=>`Budget: $${v}K`}/>
+                      <Line type="monotone" dataKey="eu" name="E[U]" stroke="#facc15" strokeWidth={2} dot={false}/>
+                    </LineChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+              </div>
+              <p style={{margin:"8px 0 0",fontSize:10,color:"#475569"}}>
+                The left chart shows which levers the optimizer allocates to as budget grows.
+                The inflection point where a new lever enters is the budget threshold for diversification.
+              </p>
+            </Panel>
+
+            {/* ── SA2: I1 Cap ── */}
+            <Panel title="② Maintenance Cap — What happens if we can only put a limited amount into preventive maintenance?">
+              <div style={{display:"flex",flexWrap:"wrap",gap:12,alignItems:"center",marginBottom:12}}>
+                <NInput label="Max I1 (Preventive Maint.) units" value={sensI1Cap} step={0.25}
+                  onChange={v=>setSensI1Cap(Math.max(0,v))}/>
+                <div style={{fontSize:12,color:"#94a3b8"}}>Budget: {budget} units (${(budget*100).toFixed(0)}K)</div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10,marginBottom:12}}>
+                <Kpi title="Unconstrained E[spills]" value={fmt(optLambda,3)}
+                  subtitle="No cap on I1" accent="#38bdf8"/>
+                <Kpi title="Capped E[spills]" value={fmt(cappedLambda,3)}
+                  subtitle={`I1 ≤ ${sensI1Cap} units`} accent="#f97316"/>
+                <Kpi title="Cost of constraint" value={`+${fmt(cappedLambda-optLambda,3)} spills/yr`}
+                  subtitle="Additional expected spills" accent="#ef4444"/>
+                <Kpi title="Capped E[U]" value={fmt(cappedOpt.finalEU,4)}
+                  subtitle={`vs unconstrained ${fmt(optimized.finalEU,4)}`} accent="#facc15"/>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+                <ChartCard title="Unconstrained Optimal Allocation">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={levers.map(l=>({lever:l.short,units:optimized.investment[l.key]}))}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                      <XAxis dataKey="lever" stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                      <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                      <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}/>
+                      <Bar dataKey="units" name="Units allocated" fill="#38bdf8" radius={[3,3,0,0]}/>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+                <ChartCard title={`Capped Allocation (I1 ≤ ${sensI1Cap} units)`}>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <BarChart data={levers.map(l=>({lever:l.short,units:cappedOpt.investment[l.key],cap:l.key==="I1"?sensI1Cap:undefined}))}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/>
+                      <XAxis dataKey="lever" stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                      <YAxis stroke="#475569" tick={{fill:"#94a3b8",fontSize:11}}/>
+                      <Tooltip contentStyle={{background:"#0f172a",border:"1px solid #334155",borderRadius:8}}/>
+                      <Bar dataKey="units" name="Units allocated" radius={[3,3,0,0]}>
+                        {levers.map(l=>(
+                          <Cell key={l.key} fill={l.key==="I1"?"#ef4444":"#f97316"}/>
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <p style={{margin:"6px 0 0",fontSize:10,color:"#475569"}}>Red = constrained lever. Model redirects remaining budget to next best lever.</p>
+                </ChartCard>
+              </div>
+            </Panel>
+
+            {/* ── SA3: Tornado / Volume Extremes ── */}
+            <Panel title="③ Tornado — How do extreme assumptions change expected annual cost?">
+              <p style={{margin:"0 0 12px",fontSize:12,color:"#94a3b8",lineHeight:1.6}}>
+                Each row varies one input from its minimum to maximum extreme while holding everything else at the base scenario.
+                Bar width = total swing in expected annual cost. Base = ${fmtDollars(tornadoData.baseC)}.
+              </p>
+
+              {/* Volume scenario selector */}
+              <div style={{display:"flex",gap:6,alignItems:"center",marginBottom:14,flexWrap:"wrap"}}>
+                <span style={{fontSize:11,color:"#94a3b8"}}>Volume scenario preview:</span>
+                {[["min","All spills at minimum volume"],["base","Historical distribution (base)"],["max","All spills at maximum volume"]].map(([k,label])=>(
+                  <button key={k} onClick={()=>setSensVolScenario(k)}
+                    style={sensVolScenario===k?{...TON,background:"#38bdf8",color:"#0f172a"}:TOFF}>{label}</button>
+                ))}
+              </div>
+
+              {/* Volume scenario KPIs */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(175px,1fr))",gap:10,marginBottom:14}}>
+                <Kpi title="Min volume E[cost]" value={fmtDollars(tornadoData.vMin.expectedCost)}
+                  subtitle="All spills at category floor" accent="#22c55e"/>
+                <Kpi title="Base E[cost]" value={fmtDollars(tornadoData.base.expectedCost)}
+                  subtitle="Historical volume distribution" accent="#38bdf8"/>
+                <Kpi title="Max volume E[cost]" value={fmtDollars(tornadoData.vMax.expectedCost)}
+                  subtitle="All spills at category ceiling" accent="#ef4444"/>
+                <Kpi title="Volume swing" value={fmtDollars(tornadoData.vMax.expectedCost - tornadoData.vMin.expectedCost)}
+                  subtitle="Max − Min expected cost" accent="#f97316"/>
+              </div>
+
+              {/* Tornado chart */}
+              <ChartCard title="Tornado Diagram — Swing in Expected Annual Cost">
+                <p style={{margin:"0 0 10px",fontSize:11,color:"#64748b"}}>
+                  Each bar shows how much expected annual cost changes from base when the variable is at its low (left) or high (right) extreme.
+                </p>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {tornadoData.rows.map((row,i)=>{
+                    const maxSwing = Math.max(...tornadoData.rows.map(r=>r.swing));
+                    const scaleW = (v) => `${Math.abs(v)/maxSwing*45}%`;
+                    return (
+                      <div key={i}>
+                        <div style={{fontSize:11,color:"#94a3b8",marginBottom:3}}>{row.label}</div>
+                        <div style={{display:"flex",alignItems:"center",gap:4}}>
+                          {/* Low side — left */}
+                          <div style={{width:"45%",display:"flex",justifyContent:"flex-end"}}>
+                            <div style={{
+                              width: scaleW(row.lowDelta),
+                              minWidth:2,
+                              background: row.lowDelta < 0 ? "#22c55e" : "#ef4444",
+                              height:22,borderRadius:"4px 0 0 4px",
+                              display:"flex",alignItems:"center",justifyContent:"flex-end",
+                              paddingRight:4,fontSize:9,color:"#f1f5f9",fontFamily:"'DM Mono',monospace"
+                            }}>
+                              {fmtDollars(row.low)}
+                            </div>
+                          </div>
+                          {/* Center baseline */}
+                          <div style={{width:2,height:28,background:"#475569"}}/>
+                          {/* High side — right */}
+                          <div style={{width:"45%",display:"flex",justifyContent:"flex-start"}}>
+                            <div style={{
+                              width: scaleW(row.highDelta),
+                              minWidth:2,
+                              background: row.highDelta > 0 ? "#ef4444" : "#22c55e",
+                              height:22,borderRadius:"0 4px 4px 0",
+                              display:"flex",alignItems:"center",
+                              paddingLeft:4,fontSize:9,color:"#f1f5f9",fontFamily:"'DM Mono',monospace"
+                            }}>
+                              {fmtDollars(row.high)}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{fontSize:9,color:"#475569",marginTop:2}}>
+                          Swing: {fmtDollars(row.swing)} &nbsp;|&nbsp; Base: {fmtDollars(row.base)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p style={{margin:"12px 0 0",fontSize:10,color:"#475569"}}>
+                  Green = reduces cost vs base · Red = increases cost vs base.
+                  Failure rate (λ) extremes: ×0.5 (optimistic) and ×2.0 (pessimistic).
+                  Risk tolerance (ρ) extremes: ×0.1 (very risk averse) and ×10 (near risk neutral) — affects utility, not raw cost.
+                </p>
+              </ChartCard>
+            </Panel>
           </div>
         )}
 
