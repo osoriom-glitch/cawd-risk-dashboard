@@ -1570,7 +1570,7 @@ attention.
 \paragraph{Results.}
 Figure~\ref{fig:sa3} and Table~\ref{tab:tornado} summarize the
 tornado results relative to the base expected annual cost of
-approximately \$525K under the optimized allocation. The figure
+approximately \$605K under the optimized allocation. The figure
 shows cost deviations in the left panel and expected-utility
 deviations in the right panel, so the effect of changing
 risk tolerance $\rho$ is visible even though raw cost is unchanged.
@@ -1578,7 +1578,7 @@ risk tolerance $\rho$ is visible even though raw cost is unchanged.
 \begin{table}[H]
 \centering
 \caption{Tornado diagram summary (SA3). Base expected annual cost
-  $\approx$ \$525K (optimized allocation, seeded MC, 4{,}000 runs).
+  $\approx$ \$605K (optimized allocation, seeded MC, 4{,}000 runs).
   Swing $=$ max $-$ min expected cost.}
 \label{tab:tornado}
 \begin{tabular}{lcccr}
@@ -1587,9 +1587,9 @@ risk tolerance $\rho$ is visible even though raw cost is unchanged.
   & \textbf{$E[\text{cost}]$ high} & \textbf{Swing} \\
 \midrule
 Spill volume (min $\to$ max) & Cat.\ floors
-  & $\sim$\$110K & $\sim$\$8.2M & $\sim$\$8.1M \\
+  & $\sim$\$448K & $\sim$\$1.62M & $\sim$\$1.17M \\
 Failure rate $\lambda$ ($\times 0.5 \to \times 2$) & $\lambda \times 0.5$
-  & $\sim$\$260K & $\sim$\$1.05M & $\sim$\$0.79M \\
+  & $\sim$\$301K & $\sim$\$1.21M & $\sim$\$0.91M \\
 Risk tolerance $\rho$ ($\times 0.1 \to \times 10$) & $\rho = \$1$M
   & \multicolumn{2}{c}{(utility scale only; raw cost unchanged)} & --- \\
 \bottomrule
@@ -1598,15 +1598,13 @@ Risk tolerance $\rho$ ($\times 0.1 \to \times 10$) & $\rho = \$1$M
 
 \textbf{Spill volume is overwhelmingly the dominant cost driver.}
 When all spills occur at minimum volume (category floors), expected
-annual cost falls to approximately \$110K---a reduction of
-\$415K from the \$525K base. When all spills occur at maximum volume
-(category ceilings), expected annual cost rises to approximately
-\$8.2M, driven by the single-spill contribution of a Cat.~1 event at
-the 145{,}000-gallon ceiling: a single such spill costs
-$\$100{,}000 + \$10 \times 145{,}000 = \$1.55$M, and the cost model
-is linear in volume above the fixed charge. The total swing exceeds
-\$8.1M, confirming that the upper tail of the volume distribution
-dominates the expected-cost calculation. This has two implications
+annual cost falls to approximately \$448K---a reduction of
+about \$157K from the \$605K base. When all spills occur at maximum
+volume (category ceilings), expected annual cost rises to approximately
+\$1.62M, an increase of about \$1.01M above base. The total swing is
+therefore roughly \$1.17M, confirming that the upper tail of the
+volume distribution still dominates the expected-cost calculation.
+This has two implications
 for CAWD: (i) the historical record contains genuine tail events
 (the 2017 Hatton Canyon pipe failure at 145{,}000 gallons and the
 2023 pipe failures totaling over 93{,}000 gallons) that are
@@ -1618,10 +1616,10 @@ a cost benefit disproportionate to its effect on spill frequency.
 \textbf{Failure rate uncertainty is the second-largest driver.}
 Scaling all $\lambda$ values by 0.5 (reflecting an optimistic
 scenario in which infrastructure condition improves markedly)
-reduces expected annual cost to approximately \$260K. Scaling by 2.0
+reduces expected annual cost to approximately \$301K. Scaling by 2.0
 (reflecting a pessimistic scenario of accelerated aging or
-under-investment) raises it to approximately \$1.05M. The total
-swing of approximately \$0.79M reflects the fact that expected cost
+under-investment) raises it to approximately \$1.21M. The total
+swing of approximately \$0.91M reflects the fact that expected cost
 is proportional to expected spill frequency, which is linear in
 $\lambda$ through the Poisson model. This confirms that the rate
 estimates $\lambda_0$---drawn from 25.25 years of CAWD history after
@@ -1635,11 +1633,13 @@ $U(-C) = 1 - e^{C/\rho}$ and not through the cost simulation
 itself, varying $\rho$ does not change expected annual cost. At
 $\rho = \$1$M (very risk-averse, $\rho \times 0.1$), the utility
 function is highly concave and severely penalizes tail outcomes:
-$E[U]$ falls sharply, and the optimizer under this setting would
+$E[U]$ falls from approximately $-0.063$ to $-0.948$, and the
+optimizer under this setting would
 be expected to shift even more of the budget toward prevention. At
 $\rho = \$100$M (near-risk-neutral, $\rho \times 10$), $E[U]$
-approaches $-E[C]/\rho$, and the objective reduces approximately to
-expected-cost minimization. The calibrated value $\rho = \$10$M
+increases to approximately $-0.006$, approaching $-E[C]/\rho$, and
+the objective reduces approximately to expected-cost minimization.
+The calibrated value $\rho = \$10$M
 (board-elicited, $1/\gamma \approx \$11$M) lies between these
 extremes and is consistent with the board placing material weight
 on tail outcomes without being dominated by worst-case scenarios.
@@ -1651,7 +1651,7 @@ of the utility calibration.
   \centering
   \includegraphics[width=\columnwidth]{figures/sa3_tornado.png}
   \caption{Tornado diagram (SA3). Left: deviation of expected annual
-    cost from the base scenario (\$525K) when one input is set to
+    cost from the base scenario (\$605K) when one input is set to
     its low (green, cost-reducing) or high (red, cost-increasing)
     extreme. Right: deviation of expected utility from the base
     scenario under the same perturbations. Spill volume dominates the
