@@ -39,6 +39,7 @@ HIST_GALLONS = {
 
 SENS_SEED = 12345
 MC_SENS_RUNS = 1500
+MC_SA1_RUNS = 1600
 ENTRY_THRESHOLD = 0.5
 PERSIST_STEPS = 3
 RHO_DOLLARS = 10_000_000
@@ -206,16 +207,21 @@ def eu_for(lambda0, alpha, inv, runs, rng):
     return s / runs
 
 
-def greedy_optimize(lambda0, alpha, costs, budget, step=0.25, runs=MC_SENS_RUNS, rng=None):
-    if rng is None:
-        rng = mulberry32(SENS_SEED)
+def eu_for_seed(lambda0, alpha, inv, runs, seed):
+    return eu_for(lambda0, alpha, inv, runs, mulberry32(seed))
+
+
+def greedy_optimize(lambda0, alpha, costs, budget, step=0.25, runs=MC_SENS_RUNS, seed=SENS_SEED):
+    if seed is None:
+        seed = SENS_SEED
 
     inv = {"I1": 0.0, "I2": 0.0, "I3": 0.0, "I4": 0.0}
     remaining = budget
-    current_eu = eu_for(lambda0, alpha, inv, runs, rng)
 
     t = 0
     while remaining >= step and t < 1000:
+        step_seed = seed + t * 1000
+        current_eu = eu_for_seed(lambda0, alpha, inv, runs, step_seed)
         best_lever = None
         best_eu = -1e99
         for lever in LEVERS:
@@ -224,7 +230,7 @@ def greedy_optimize(lambda0, alpha, costs, budget, step=0.25, runs=MC_SENS_RUNS,
                 continue
             trial = dict(inv)
             trial[lever] += step
-            trial_eu = eu_for(lambda0, alpha, trial, runs, rng)
+            trial_eu = eu_for_seed(lambda0, alpha, trial, runs, step_seed)
             if trial_eu > best_eu:
                 best_eu = trial_eu
                 best_lever = lever
@@ -232,22 +238,23 @@ def greedy_optimize(lambda0, alpha, costs, budget, step=0.25, runs=MC_SENS_RUNS,
             break
         inv[best_lever] += step
         remaining -= costs.get(best_lever, 1.0) * step
-        current_eu = best_eu
         t += 1
 
-    return {"investment": inv, "remaining": remaining, "finalEU": current_eu}
+    final_eu = eu_for_seed(lambda0, alpha, inv, runs, seed + 1_000_000)
+    return {"investment": inv, "remaining": remaining, "finalEU": final_eu}
 
 
-def greedy_optimize_capped(lambda0, alpha, costs, budget, cap_i1, step=0.25, runs=MC_SENS_RUNS, rng=None):
-    if rng is None:
-        rng = mulberry32(SENS_SEED + 9999)
+def greedy_optimize_capped(lambda0, alpha, costs, budget, cap_i1, step=0.25, runs=MC_SENS_RUNS, seed=SENS_SEED + 9999):
+    if seed is None:
+        seed = SENS_SEED + 9999
 
     inv = {"I1": 0.0, "I2": 0.0, "I3": 0.0, "I4": 0.0}
     remaining = budget
-    current_eu = eu_for(lambda0, alpha, inv, runs, rng)
 
     t = 0
     while remaining >= step and t < 1000:
+        step_seed = seed + t * 1000
+        current_eu = eu_for_seed(lambda0, alpha, inv, runs, step_seed)
         best_lever = None
         best_eu = -1e99
         for lever in LEVERS:
@@ -258,7 +265,7 @@ def greedy_optimize_capped(lambda0, alpha, costs, budget, cap_i1, step=0.25, run
                 continue
             trial = dict(inv)
             trial[lever] += step
-            trial_eu = eu_for(lambda0, alpha, trial, runs, rng)
+            trial_eu = eu_for_seed(lambda0, alpha, trial, runs, step_seed)
             if trial_eu > best_eu:
                 best_eu = trial_eu
                 best_lever = lever
@@ -266,10 +273,10 @@ def greedy_optimize_capped(lambda0, alpha, costs, budget, cap_i1, step=0.25, run
             break
         inv[best_lever] += step
         remaining -= costs.get(best_lever, 1.0) * step
-        current_eu = best_eu
         t += 1
 
-    return {"investment": inv, "remaining": remaining, "finalEU": current_eu}
+    final_eu = eu_for_seed(lambda0, alpha, inv, runs, seed + 1_000_000)
+    return {"investment": inv, "remaining": remaining, "finalEU": final_eu}
 
 
 def mc_with_volume_override(lambdas, runs, vol_mode, rng, rho=RHO_DOLLARS):
@@ -303,8 +310,8 @@ def sa1_budget_sweep(lambda0):
     idx = 0
     budget = 0.25
     while budget <= 20.000001:
-        rng = mulberry32(SENS_SEED + idx)
-        opt = greedy_optimize(lambda0, ALPHA, COSTS, round(budget, 2), 0.25, MC_SENS_RUNS, rng)
+        # Use a higher MC budget for SA1 to reduce point-level jitter in the utility curve.
+        opt = greedy_optimize(lambda0, ALPHA, COSTS, round(budget, 2), 0.25, MC_SA1_RUNS, SENS_SEED + idx)
         inv = opt["investment"]
         data.append(
             {
@@ -350,8 +357,8 @@ def sa2_cap(lambda0):
     budget = 5.5
     cap_i1 = 3.0
 
-    seeded_opt = greedy_optimize(lambda0, ALPHA, COSTS, budget, 0.25, MC_SENS_RUNS, mulberry32(SENS_SEED + 7777))
-    capped_opt = greedy_optimize_capped(lambda0, ALPHA, COSTS, budget, cap_i1, 0.25, MC_SENS_RUNS, mulberry32(SENS_SEED + 8888))
+    seeded_opt = greedy_optimize(lambda0, ALPHA, COSTS, budget, 0.25, MC_SENS_RUNS, SENS_SEED + 7777)
+    capped_opt = greedy_optimize_capped(lambda0, ALPHA, COSTS, budget, cap_i1, 0.25, MC_SENS_RUNS, SENS_SEED + 8888)
 
     return seeded_opt, capped_opt, cap_i1
 
@@ -421,6 +428,20 @@ def render_sa1(data, threshold, out_path):
     i4 = [d["I4"] for d in data]
     eu = [d["eu"] for d in data]
 
+    # Centered moving-average overlay keeps raw signal visible while clarifying trend.
+    def centered_moving_average(values, window=9):
+        if window <= 1 or len(values) < 3:
+            return values[:]
+        half = window // 2
+        out = []
+        for i in range(len(values)):
+            lo = max(0, i - half)
+            hi = min(len(values), i + half + 1)
+            out.append(sum(values[lo:hi]) / (hi - lo))
+        return out
+
+    eu_smooth = centered_moving_average(eu, window=9)
+
     fig, axes = plt.subplots(1, 2, figsize=(14, 5), dpi=180)
 
     ax = axes[0]
@@ -438,12 +459,14 @@ def render_sa1(data, threshold, out_path):
     ax.legend(fontsize=8)
 
     ax2 = axes[1]
-    ax2.plot(budgets, eu, color="#facc15", linewidth=2)
+    ax2.plot(budgets, eu, color="#facc15", linewidth=1.2, alpha=0.45, label="Raw MC estimate")
+    ax2.plot(budgets, eu_smooth, color="#38bdf8", linewidth=2.4, label="9-point moving average")
     ax2.axvline(1000, color="black", linestyle="--", linewidth=1.2)
     ax2.set_title("Expected Utility by Budget")
     ax2.set_xlabel("Budget ($K)")
     ax2.set_ylabel("E[U(-C)]")
     ax2.grid(alpha=0.25)
+    ax2.legend(fontsize=8, loc="best")
 
     fig.suptitle("SA1: Budget-Threshold Sensitivity", fontsize=14)
     fig.tight_layout()
@@ -460,23 +483,21 @@ def render_sa2(seeded_opt, capped_opt, cap_i1, out_path):
 
     ax = axes[0]
     ax.bar(labels, uncon, color="#38bdf8")
-    ax.set_ylim(0, 0.3)
-    ax.set_title("Unconstrained Allocation")
+    uncon_top = max(max(uncon) * 1.5, 0.6)
+    ax.set_ylim(0, uncon_top)
+    ax.set_title("Unconstrained Allocation ($550K budget)")
     ax.set_ylabel("Units")
     ax.grid(axis="y", alpha=0.25)
 
     ax2 = axes[1]
-    colors = ["#ef4444", "#f97316", "#f97316", "#f97316"]
+    colors = ["#ef4444", "#22c55e", "#f97316", "#a78bfa"]
     ax2.bar(labels, capd, color=colors)
-    ax2.axhline(cap_i1, color="black", linestyle="--", linewidth=1.1, label=f"I1 cap = {cap_i1}")
-    ax2.set_ylim(0, 0.3)
-    ax2.set_title("Capped Allocation (I1 = 3.0 units)")
+    capd_top = cap_i1 * 1.3
+    ax2.axhline(cap_i1, color="black", linestyle="--", linewidth=1.1, label=f"I1 cap = {cap_i1}u")
+    ax2.set_ylim(0, capd_top)
+    ax2.set_title(f"Capped Allocation (I1 ≤ {cap_i1}u, full budget deployed)")
     ax2.grid(axis="y", alpha=0.25)
     ax2.legend(fontsize=8)
-    ax2.text(0.98, 0.97, f"I1 capped at {cap_i1} units ($300K)", 
-             transform=ax2.transAxes, fontsize=9, color="#ef4444",
-             verticalalignment="top", horizontalalignment="right",
-             bbox=dict(boxstyle="round", facecolor="white", alpha=0.8))
 
     fig.suptitle("SA2: Maintenance-Cap Sensitivity (Budget = $550K)", fontsize=14)
     fig.tight_layout()

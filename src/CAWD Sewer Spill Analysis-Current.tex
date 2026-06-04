@@ -1,4 +1,4 @@
-\documentclass[10pt,twocolumn]{article}
+\documentclass[10pt]{article}
 
 \usepackage[margin=0.75in]{geometry}
 \usepackage{amsmath,amssymb,amsthm}
@@ -10,16 +10,21 @@
 \usepackage{setspace}
 \usepackage{xcolor}
 \usepackage{natbib}
+\usepackage{abstract}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{multicol} % for multi-column sections
 
 \setlength{\columnsep}{0.25in}
 \setlength{\parskip}{0.3em}
 \setlength{\parindent}{0em}
 
+\renewcommand{\abstractnamefont}{\normalfont\large\bfseries}
+\renewcommand{\abstracttextfont}{\normalfont\normalsize}
+
 \title{A Probabilistic Risk Assessment and Risk-Averse Optimization Framework for Sewer Spill Reduction in Wastewater Utilities}
 
-\author{Ramesh Manian, Khang Do, Annabelle Jayadinata, Maura Osorio \\ Sponsor: Chris Foley \\ Stanford University}
+\author{Annabelle Jayadinata, Maura Osorio, Khang Do, Ramesh Manian}
 
 \date{}
 
@@ -44,7 +49,8 @@ high-severity tail exposure.
 \end{abstract}
  
 % --- PASTE THIS AS SECTION 1 ---
- 
+\begin{multicols}{2}
+
 \section{Introduction}
  
 \subsection{Motivation}
@@ -1416,43 +1422,52 @@ steps---a persistence filter that prevents Monte Carlo noise from
 registering as a structural shift.
 
 \paragraph{Results.}
-Figure~\ref{fig:sa1} shows the budget-sweep results. Across the full
-\$0--\$2M sweep the optimizer places 100\% of every marginal dollar
-into Preventive Maintenance. No second lever clears the entry
-threshold within the sweep range. This outcome follows directly from
-the dominance of blockage events in CAWD's spill history: blockage
-accounts for 84\% of all historical spills, and $I_1$ carries the
-largest effectiveness coefficient for blockage reduction
-($\alpha_{B,I_1} = 0.040$), the largest mode contribution to overall
-risk. The next-best lever, Risk-Based Targeting ($I_4$,
-$\alpha_{B,I_4} = 0.028$), provides a substantially smaller marginal
-return per dollar under current failure-rate conditions, so the
-marginal utility improvement from $I_1$ dominates until the blockage
-rate has been driven down sufficiently to shift the relative returns.
-The result implies that the \$1M preventive-maintenance proposal is
-not a local coincidence but the dominant strategy across a wide range
-of organizational budgets.
+Figure~\ref{fig:sa1} shows the budget-sweep results. Below \$225K,
+the optimizer allocates exclusively to Preventive Maintenance ($I_1$),
+which carries the highest per-dollar effectiveness for blockage
+reduction ($\alpha_{B,I_1} = 0.040$, the dominant failure mode at
+84\% of historical spills). At \$225K, Risk-Based Targeting ($I_4$)
+first clears the entry threshold---holding $\geq$0.5 units for three
+consecutive budget steps---marking the diversification point beyond
+which the optimizer splits resources across multiple levers.
 
-Expected utility $E[U(-C)]$ increases monotonically with budget
-throughout the sweep (Figure~\ref{fig:sa1}, right panel), confirming
-that the full budget is productively absorbed---there is no budget
-level within the sweep at which additional investment yields
-diminishing marginal utility sufficient to divert resources to a
-different lever. The \$1M proposal sits below the diversification
-threshold, meaning the board's current investment plan is
-structurally consistent with the model's recommendation across the
-full realistic budget range.
+Above \$225K, the allocation is mixed throughout the sweep. $I_1$
+remains the primary lever at most budget levels, but $I_3$ (Execution
+Quality) and $I_4$ (Risk-Based Targeting) receive meaningful
+allocations alongside it as the budget grows. At the \$1M board
+proposal, the optimizer distributes investment across $I_1$, $I_3$,
+and $I_4$, reflecting complementary blockage-mitigation pathways:
+maintenance reduces recurrence, targeting concentrates effort on
+high-risk pipe segments, and execution quality reduces the probability
+of maintenance failures. Because the \$1M proposal sits well above
+the \$225K diversification threshold, the board's investment plan
+should incorporate multiple levers rather than concentrate
+exclusively in preventive maintenance.
+
+Expected utility $E[U(-C)]$ in Figure~\ref{fig:sa1} (right panel) is
+shown as both a raw Monte Carlo trace and a smoothed overlay. The raw
+series remains locally non-monotonic due to finite-sample variability,
+but the 9-point moving-average line makes the directional pattern
+clearer: utility generally improves as budget increases. To reduce
+point-level noise, SA1 is evaluated with 1{,}600 Monte Carlo runs per
+budget point. Accordingly, SA1 is interpreted using both the
+diversification threshold (\$225K) and the smoothed utility trend,
+rather than requiring strict monotonicity in every adjacent point.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\columnwidth]{figures/sa1_budget_sweep.png}
   \caption{Budget-threshold sensitivity analysis (SA1). Left: investment
-    allocation by budget level; the optimizer places 100\% into
-    Preventive Maintenance ($I_1$, blue) across the entire
-    \$0--\$2M sweep. No second lever clears the entry threshold.
-    Right: expected utility $E[U(-C)]$ as a function of budget,
-    increasing monotonically. The dashed white line marks the
-    \$1M board proposal. Seeded MC, 1{,}500 runs per point.}
+    allocation by budget level. Below \$225K the optimizer concentrates
+    entirely in Preventive Maintenance ($I_1$, blue); the yellow dashed
+    line marks the \$225K diversification threshold where Risk-Based
+    Targeting ($I_4$, purple) first enters the solution. Above \$225K
+    allocation is mixed across $I_1$, $I_3$, and $I_4$. The black
+    dashed line marks the \$1M board proposal. Right: expected utility
+    $E[U(-C)]$ by budget with two traces: raw MC estimates (yellow)
+    and a 9-point moving-average overlay (blue) to reveal the
+    directional trend. Raw point-level variation remains non-monotonic.
+    Seeded MC, 1{,}600 runs per point (SA1).}
   \label{fig:sa1}
 \end{figure}
 
@@ -1470,68 +1485,75 @@ is restricted.
 \paragraph{Results.}
 Table~\ref{tab:sa2-cap} reports the unconstrained and
 maintenance-capped outcomes at the \$550K current-scenario budget
-(5.5 units) for three cap levels: \$550K (unconstrained), \$300K,
-and \$150K.
+under two scenarios: unconstrained and with $I_1$ capped at \$300K
+(3 units).
 
-\begin{table}[H]
+\begin{table*}[b]
 \centering
 \caption{Maintenance-cap sensitivity (SA2). Budget fixed at \$550K
 (5.5 units). All analyses seeded, 1{,}500 MC runs.}
 \label{tab:sa2-cap}
-\begin{tabular}{lcccccc}
+\begin{tabular}{lccccr r}
 \toprule
 \textbf{Cap on $I_1$} & \boldmath$I_1$ & \boldmath$I_2$ &
   \boldmath$I_3$ & \boldmath$I_4$ &
-  \textbf{$E[\lambda]$} & \textbf{$E[U]$} \\
+  \textbf{Unspent} & \textbf{$E[U]$} \\
 \midrule
-None (5.5 u)   & 5.50 & 0.00 & 0.00 & 0.00 & 4.37 & $-$0.041 \\
-3.0 u (\$300K) & 3.00 & 0.00 & 0.00 & 2.50 & 4.89 & $-$0.047 \\
-1.5 u (\$150K) & 1.50 & 0.25 & 0.00 & 3.75 & 5.36 & $-$0.052 \\
+None (unconstrained) & 0.50 & 0.00 & 0.00 & 0.25 & 4.75\,u & $-$0.070 \\
+3.0\,u cap (\$300K)  & 3.00 & 0.50 & 1.50 & 0.50 & 0.00\,u & $-$0.062 \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
-When $I_1$ is capped at \$300K, the optimizer redirects the remaining
-\$250K entirely to Risk-Based Targeting ($I_4$), which has the highest
-effectiveness coefficient for blockage among the remaining levers
-($\alpha_{B,I_4} = 0.028$). This is the model's rational response to
-a binding maintenance constraint: it channels resources toward the
-next-best blockage-mitigation lever. The expected annual spill rate
-increases from 4.37 to 4.89 spills per year---a penalty of
-0.52 additional expected spills per year, or approximately 12\% more
-exposure than the unconstrained case---and expected utility falls from
-$-0.041$ to $-0.047$.
+In the unconstrained scenario, the greedy optimizer deploys only
+\$75K of the \$550K budget (0.5\,u of $I_1$ and 0.25\,u of $I_4$),
+leaving \$475K unallocated. Each subsequent \$25K step fails to
+produce a utility improvement distinguishable from Monte Carlo
+estimation noise at 1{,}500 samples per evaluation, so the optimizer
+halts early. This reflects a modeling boundary: at current
+failure-rate parameters, the per-step marginal utility gain is below
+the noise floor, and the greedy algorithm cannot justify further
+deployment from the simulation evidence alone.
 
-At the tighter \$150K cap, the optimizer allocates the remaining
-\$400K primarily to Risk-Based Targeting with a small residual to
-Workforce Capacity ($I_2$), which contributes modestly to
-blockage reduction via improved response effectiveness. Expected
-annual spills rise to 5.36, and expected utility falls to $-0.052$.
-Workforce Capacity and Execution Quality ($I_3$) enter only when
-the two highest-return levers ($I_1$ and $I_4$) are exhausted,
-consistent with their lower effectiveness coefficients for the
-dominant blockage mode.
+When $I_1$ is capped at \$300K (3 units), a qualitatively different
+outcome emerges: the optimizer deploys the \emph{entire} \$550K
+budget. With the dominant lever restricted, the model exhausts the
+remaining capacity across $I_2$ (Workforce Capacity, 0.5\,u),
+$I_3$ (Execution Quality, 1.5\,u), and $I_4$ (Risk-Based Targeting,
+0.5\,u). The priority order among secondary levers follows the
+effectiveness matrix: $I_3$ receives the largest secondary allocation
+because it carries the highest effectiveness coefficients for the
+pump and operational failure modes once the dominant blockage levers
+are saturated. Expected utility improves from $-0.070$ in the
+unconstrained run to $-0.062$ under the cap---a counter-intuitive
+result explained by the constraint forcing full budget deployment
+that the unconstrained optimizer defers due to noisy per-step signals.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\columnwidth]{figures/sa2_cap_comparison.png}
   \caption{Maintenance-cap sensitivity (SA2). Left: unconstrained
-    optimal allocation at \$550K budget (all $I_1$). Right:
-    allocation when $I_1$ is capped at \$300K (3 units); remaining
-    \$250K redirected to Risk-Based Targeting ($I_4$, orange).
-    Red bar indicates the constrained lever.}
+    allocation at \$550K budget; optimizer deploys only \$75K
+    ($I_1$=0.5\,u, $I_4$=0.25\,u), leaving \$475K unspent.
+    Right: allocation when $I_1$ is capped at \$300K (3.0\,u);
+    full \$550K deployed across all four levers ($I_1$=3.0,
+    $I_2$=0.5, $I_3$=1.5, $I_4$=0.5\,u). Dashed line marks the
+    cap level. Red bar indicates the constrained lever.}
   \label{fig:sa2}
 \end{figure}
 
-These results have a direct operational interpretation: even a
-moderate restriction on preventive maintenance investment forces the
-model to substitute toward targeting-based interventions, but the
-substitution is imperfect. No combination of workforce, execution, or
-targeting investments fully compensates for reduced maintenance,
-because those levers primarily act on lower-frequency failure
-modes. The blockage-reduction gap created by the maintenance cap
-cannot be closed by reallocating to other levers alone; it requires
-either lifting the cap or accepting higher expected spill frequency.
+These results have a direct operational interpretation. The
+unconstrained optimizer's early termination at \$75K reflects the
+limit of the per-step MC signal at 1{,}500 samples: the full \$550K
+budget is genuinely beneficial, but the greedy algorithm cannot
+detect the incremental gain above the noise floor. The cap scenario
+demonstrates that once a binding constraint forces exploration of
+secondary levers, Execution Quality ($I_3$) and Risk-Based Targeting
+($I_4$) together absorb the entire remaining capacity. The
+blockage-reduction gap created by the maintenance cap is therefore
+partially bridged by the secondary lever mix, though no combination
+of $I_2$, $I_3$, and $I_4$ fully replicates the effectiveness of
+unrestricted preventive maintenance on the dominant failure mode.
 
 \subsection{Tornado Diagram: Cost Sensitivity to Extreme Assumptions}
 
@@ -1575,7 +1597,7 @@ shows cost deviations in the left panel and expected-utility
 deviations in the right panel, so the effect of changing
 risk tolerance $\rho$ is visible even though raw cost is unchanged.
 
-\begin{table}[H]
+\begin{table*}[!b]
 \centering
 \caption{Tornado diagram summary (SA3). Base expected annual cost
   $\approx$ \$605K (optimized allocation, seeded MC, 4{,}000 runs).
@@ -1594,7 +1616,7 @@ Risk tolerance $\rho$ ($\times 0.1 \to \times 10$) & $\rho = \$1$M
   & \multicolumn{2}{c}{(utility scale only; raw cost unchanged)} & --- \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 \textbf{Spill volume is overwhelmingly the dominant cost driver.}
 When all spills occur at minimum volume (category floors), expected
@@ -1864,6 +1886,8 @@ C(I,\omega)
 probability of annual cost exceeding \$1M, and expected utility.
 
 \end{enumerate}
+
+\end{multicols}
 
 \section{Supplementary Tables}
 
