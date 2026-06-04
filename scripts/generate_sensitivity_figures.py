@@ -447,7 +447,7 @@ def render_sa2(seeded_opt, capped_opt, cap_i1, out_path):
 
     ax = axes[0]
     ax.bar(labels, uncon, color="#38bdf8")
-    ax.set_ylim(0, max(max(uncon), max(capd), cap_i1) + 0.75)
+    ax.set_ylim(0, 0.3)
     ax.set_title("Unconstrained Allocation")
     ax.set_ylabel("Units")
     ax.grid(axis="y", alpha=0.25)
@@ -456,7 +456,7 @@ def render_sa2(seeded_opt, capped_opt, cap_i1, out_path):
     colors = ["#ef4444", "#f97316", "#f97316", "#f97316"]
     ax2.bar(labels, capd, color=colors)
     ax2.axhline(cap_i1, color="black", linestyle="--", linewidth=1.1, label=f"I1 cap = {cap_i1}")
-    ax2.set_ylim(0, max(max(uncon), max(capd), cap_i1) + 0.75)
+    ax2.set_ylim(0, 0.3)
     ax2.set_title("Capped Allocation (I1 = 3.0 units)")
     ax2.grid(axis="y", alpha=0.25)
     ax2.legend(fontsize=8)
