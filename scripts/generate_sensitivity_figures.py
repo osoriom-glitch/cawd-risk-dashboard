@@ -457,9 +457,13 @@ def render_sa2(seeded_opt, capped_opt, cap_i1, out_path):
     ax2.bar(labels, capd, color=colors)
     ax2.axhline(cap_i1, color="black", linestyle="--", linewidth=1.1, label=f"I1 cap = {cap_i1}")
     ax2.set_ylim(0, max(max(uncon), max(capd), cap_i1) + 0.75)
-    ax2.set_title("Capped Allocation")
+    ax2.set_title("Capped Allocation (I1 = 3.0 units)")
     ax2.grid(axis="y", alpha=0.25)
     ax2.legend(fontsize=8)
+    ax2.text(0.98, 0.97, f"I1 capped at {cap_i1} units ($300K)", 
+             transform=ax2.transAxes, fontsize=9, color="#ef4444",
+             verticalalignment="top", horizontalalignment="right",
+             bbox=dict(boxstyle="round", facecolor="white", alpha=0.8))
 
     fig.suptitle("SA2: Maintenance-Cap Sensitivity (Budget = $550K)", fontsize=14)
     fig.tight_layout()
