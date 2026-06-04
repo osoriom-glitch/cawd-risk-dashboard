@@ -377,6 +377,12 @@ function euFor(lambda0, alpha, inv, runs, rng = Math.random) {
   return sumU / runs;
 }
 
+// euForSeed: create a fresh seeded RNG for each call — used by the seeded optimizer
+// so each candidate evaluation gets identical stochasticity (fair comparison).
+function euForSeed(lambda0, alpha, inv, runs, seed) {
+  return euFor(lambda0, alpha, inv, runs, mulberry32(seed));
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // GREEDY OPTIMIZER — Dashboard/Optimizer tabs (live)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -407,6 +413,61 @@ function greedyOptimize(lambda0, alpha, costs, budget, step=0.25, runs=MC_OPT_RU
     path.push({step:t, eu:currentEU, lambda:sumValues(computeLambdas(lambda0,alpha,inv)), ...inv});
   }
   return {investment:inv, remaining, path, finalEU:currentEU};
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SEEDED GREEDY OPTIMIZER — Sensitivity tab only.
+// At each decision step t, all candidates (current inv + each trial) are evaluated
+// with the SAME fresh seed (seed + t*1000), giving a fair identical-MC comparison.
+// Matches the Python generate_sensitivity_figures.py greedy_optimize() exactly.
+// ─────────────────────────────────────────────────────────────────────────────
+function greedyOptimizeSeeded(lambda0, alpha, costs, budget, step=0.25, runs=MC_SENS_RUNS, seed=SENS_SEED) {
+  const inv = {I1:0,I2:0,I3:0,I4:0};
+  let remaining = budget;
+  let t = 0;
+  while (remaining >= step && t < 1000) {
+    const stepSeed = seed + t * 1000;
+    const currentEU = euForSeed(lambda0, alpha, inv, runs, stepSeed);
+    let bestLever=null, bestEU=-Infinity;
+    for (const lever of levers) {
+      const cost = costs[lever.key]||1;
+      if (cost*step > remaining) continue;
+      const trial = {...inv, [lever.key]:inv[lever.key]+step};
+      const trialEU = euForSeed(lambda0, alpha, trial, runs, stepSeed); // same seed → fair
+      if (trialEU > bestEU) { bestEU=trialEU; bestLever=lever.key; }
+    }
+    if (!bestLever || bestEU <= currentEU) break;
+    inv[bestLever] += step;
+    remaining -= (costs[bestLever]||1)*step;
+    t++;
+  }
+  const finalEU = euForSeed(lambda0, alpha, inv, runs, seed + 1000000);
+  return {investment:inv, remaining, finalEU};
+}
+
+function greedyOptimizeCappedSeeded(lambda0, alpha, costs, budget, capI1, step=0.25, runs=MC_SENS_RUNS, seed=SENS_SEED+9999) {
+  const inv = {I1:0,I2:0,I3:0,I4:0};
+  let remaining = budget;
+  let t = 0;
+  while (remaining >= step && t < 1000) {
+    const stepSeed = seed + t * 1000;
+    const currentEU = euForSeed(lambda0, alpha, inv, runs, stepSeed);
+    let bestLever=null, bestEU=-Infinity;
+    for (const lever of levers) {
+      const cost = costs[lever.key]||1;
+      if (cost*step > remaining) continue;
+      if (lever.key==="I1" && inv.I1+step > capI1) continue;
+      const trial = {...inv,[lever.key]:inv[lever.key]+step};
+      const trialEU = euForSeed(lambda0, alpha, trial, runs, stepSeed); // same seed → fair
+      if (trialEU>bestEU){bestEU=trialEU;bestLever=lever.key;}
+    }
+    if (!bestLever||bestEU<=currentEU) break;
+    inv[bestLever]+=step;
+    remaining-=(costs[bestLever]||1)*step;
+    t++;
+  }
+  const finalEU = euForSeed(lambda0, alpha, inv, runs, seed + 1000000);
+  return {investment:inv, remaining, finalEU};
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -604,8 +665,10 @@ export default function App() {
     const results = [];
     let idx = 0;
     for (let b = 0.25; b <= sensBudgetMax + 1e-9; b += 0.25) {
-      const rng = mulberry32(SENS_SEED + idx); // deterministic per budget step
-      const opt = greedyOptimize(lambda0, alpha, costs, +b.toFixed(2), 0.25, MC_SENS_RUNS, rng);
+      // greedyOptimizeSeeded: each budget point uses seed SENS_SEED+idx, and
+      // within that run each decision step uses stepSeed = seed + t*1000,
+      // so all candidates at each step share identical MC (fair comparison).
+      const opt = greedyOptimizeSeeded(lambda0, alpha, costs, +b.toFixed(2), 0.25, MC_SENS_RUNS, SENS_SEED + idx);
       results.push({
         budget: +b.toFixed(2),
         budgetDollars: +(b * 100).toFixed(0),
@@ -646,40 +709,16 @@ export default function App() {
     return null;
   }, [budgetSweep]);
 
-  // ── SA2: I1 cap — also SEEDED for reproducibility ──────────────────────────
-  function greedyOptimizeCapped(lambda0, alpha, costs, budget, capI1, step=0.25, runs=MC_SENS_RUNS, rng) {
-    const r = rng || mulberry32(SENS_SEED + 9999);
-    const inv = {I1:0,I2:0,I3:0,I4:0};
-    let remaining = budget;
-    let currentEU = euFor(lambda0, alpha, inv, runs, r);
-    let t = 0;
-    while (remaining >= step && t < 1000) {
-      let bestLever=null, bestEU=-Infinity;
-      for (const lever of levers) {
-        const cost = costs[lever.key]||1;
-        if (cost*step > remaining) continue;
-        if (lever.key==="I1" && inv.I1+step > capI1) continue;
-        const trial = {...inv,[lever.key]:inv[lever.key]+step};
-        const trialEU = euFor(lambda0,alpha,trial,runs,r);
-        if (trialEU>bestEU){bestEU=trialEU;bestLever=lever.key;}
-      }
-      if (!bestLever||bestEU<=currentEU) break;
-      inv[bestLever]+=step;
-      remaining-=(costs[bestLever]||1)*step;
-      currentEU=bestEU; t++;
-    }
-    return {investment:inv,remaining,finalEU:currentEU};
-  }
-
+  // ── SA2: uses the seeded-per-step optimizers (same logic as Python script) ──
   // Unconstrained seeded optimum at current budget — apples-to-apples with capped
   const seededOpt = useMemo(() =>
-    greedyOptimize(lambda0, alpha, costs, budget, 0.25, MC_SENS_RUNS, mulberry32(SENS_SEED + 7777)),
+    greedyOptimizeSeeded(lambda0, alpha, costs, budget, 0.25, MC_SENS_RUNS, SENS_SEED + 7777),
   // eslint-disable-next-line react-hooks/exhaustive-deps
   [lambda0, alpha, costs, budget]);
   const seededOptLambda = sumValues(computeLambdas(lambda0, alpha, seededOpt.investment));
 
   const cappedOpt = useMemo(() =>
-    greedyOptimizeCapped(lambda0, alpha, costs, budget, sensI1Cap, 0.25, MC_SENS_RUNS, mulberry32(SENS_SEED + 8888)),
+    greedyOptimizeCappedSeeded(lambda0, alpha, costs, budget, sensI1Cap, 0.25, MC_SENS_RUNS, SENS_SEED + 8888),
   // eslint-disable-next-line react-hooks/exhaustive-deps
   [lambda0, alpha, costs, budget, sensI1Cap]);
 
@@ -1380,13 +1419,15 @@ export default function App() {
                   subtitle="Max − Min expected cost" accent="#f97316"/>
               </div>
 
-              <ChartCard title="Tornado Diagram — Swing in Expected Annual Cost">
+              {/* Cost tornado */}
+              <ChartCard title="Tornado — Swing in Expected Annual Cost">
                 <p style={{margin:"0 0 10px",fontSize:11,color:"#64748b"}}>
-                  Each bar shows how much expected annual cost changes from base when the variable is at its low (left) or high (right) extreme.
+                  Each bar shows how much expected annual cost changes from base ({fmtDollars(tornadoData.baseC)}) when the variable is at its extreme.
+                  ρ does not change cost (only utility) — see utility panel below.
                 </p>
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
                   {tornadoData.rows.map((row,i)=>{
-                    const maxSwing = Math.max(...tornadoData.rows.map(r=>r.swing));
+                    const maxSwing = Math.max(...tornadoData.rows.map(r=>r.swing), 1);
                     const scaleW = (v) => `${Math.abs(v)/maxSwing*45}%`;
                     return (
                       <div key={i}>
@@ -1394,28 +1435,22 @@ export default function App() {
                         <div style={{display:"flex",alignItems:"center",gap:4}}>
                           <div style={{width:"45%",display:"flex",justifyContent:"flex-end"}}>
                             <div style={{
-                              width: scaleW(row.lowDelta),
-                              minWidth:2,
+                              width: scaleW(row.lowDelta), minWidth: row.swing > 0 ? 2 : 0,
                               background: row.lowDelta < 0 ? "#22c55e" : "#ef4444",
                               height:22,borderRadius:"4px 0 0 4px",
                               display:"flex",alignItems:"center",justifyContent:"flex-end",
                               paddingRight:4,fontSize:9,color:"#f1f5f9",fontFamily:"'DM Mono',monospace"
-                            }}>
-                              {fmtDollars(row.low)}
-                            </div>
+                            }}>{row.swing > 0 ? fmtDollars(row.low) : ""}</div>
                           </div>
                           <div style={{width:2,height:28,background:"#475569"}}/>
                           <div style={{width:"45%",display:"flex",justifyContent:"flex-start"}}>
                             <div style={{
-                              width: scaleW(row.highDelta),
-                              minWidth:2,
+                              width: scaleW(row.highDelta), minWidth: row.swing > 0 ? 2 : 0,
                               background: row.highDelta > 0 ? "#ef4444" : "#22c55e",
                               height:22,borderRadius:"0 4px 4px 0",
                               display:"flex",alignItems:"center",
                               paddingLeft:4,fontSize:9,color:"#f1f5f9",fontFamily:"'DM Mono',monospace"
-                            }}>
-                              {fmtDollars(row.high)}
-                            </div>
+                            }}>{row.swing > 0 ? fmtDollars(row.high) : "—"}</div>
                           </div>
                         </div>
                         <div style={{fontSize:9,color:"#475569",marginTop:2}}>
@@ -1425,10 +1460,52 @@ export default function App() {
                     );
                   })}
                 </div>
+              </ChartCard>
+
+              {/* Utility tornado — shows rho effect which is invisible in cost panel */}
+              <ChartCard title="Tornado — Swing in Expected Utility E[U(−C)]">
+                <p style={{margin:"0 0 10px",fontSize:11,color:"#64748b"}}>
+                  Same rows, now showing utility delta. Base E[U] = {fmt(tornadoData.baseU,4)}.
+                  Risk tolerance (ρ) only appears here — it has no cost effect.
+                </p>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {tornadoData.rows.map((row,i)=>{
+                    const maxUSwing = Math.max(...tornadoData.rows.map(r=>r.utilitySwing), 0.001);
+                    const scaleW = (v) => `${Math.abs(v)/maxUSwing*45}%`;
+                    return (
+                      <div key={i}>
+                        <div style={{fontSize:11,color:"#94a3b8",marginBottom:3}}>{row.label}</div>
+                        <div style={{display:"flex",alignItems:"center",gap:4}}>
+                          <div style={{width:"45%",display:"flex",justifyContent:"flex-end"}}>
+                            <div style={{
+                              width: scaleW(row.lowUtilityDelta), minWidth:2,
+                              background: row.lowUtilityDelta > 0 ? "#22c55e" : "#ef4444",
+                              height:22,borderRadius:"4px 0 0 4px",
+                              display:"flex",alignItems:"center",justifyContent:"flex-end",
+                              paddingRight:4,fontSize:9,color:"#f1f5f9",fontFamily:"'DM Mono',monospace"
+                            }}>{fmt(row.lowUtilityDelta,3)}</div>
+                          </div>
+                          <div style={{width:2,height:28,background:"#475569"}}/>
+                          <div style={{width:"45%",display:"flex",justifyContent:"flex-start"}}>
+                            <div style={{
+                              width: scaleW(row.highUtilityDelta), minWidth:2,
+                              background: row.highUtilityDelta > 0 ? "#22c55e" : "#ef4444",
+                              height:22,borderRadius:"0 4px 4px 0",
+                              display:"flex",alignItems:"center",
+                              paddingLeft:4,fontSize:9,color:"#f1f5f9",fontFamily:"'DM Mono',monospace"
+                            }}>{fmt(row.highUtilityDelta,3)}</div>
+                          </div>
+                        </div>
+                        <div style={{fontSize:9,color:"#475569",marginTop:2}}>
+                          Utility swing: {fmt(row.utilitySwing,4)} &nbsp;|&nbsp; Base E[U]: {fmt(row.baseUtility,4)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
                 <p style={{margin:"12px 0 0",fontSize:10,color:"#475569"}}>
-                  Green = reduces cost vs base · Red = increases cost vs base.
-                  Failure rate (λ) extremes: ×0.5 (optimistic) and ×2.0 (pessimistic).
-                  Risk tolerance (ρ) extremes: ×0.1 (very risk averse) and ×10 (near risk neutral) — affects utility, not raw cost.
+                  Green = improves utility vs base · Red = reduces utility.
+                  ρ ×0.1 (very risk-averse) drastically reduces utility; ρ ×10 (near risk-neutral) improves it.
                 </p>
               </ChartCard>
             </Panel>
