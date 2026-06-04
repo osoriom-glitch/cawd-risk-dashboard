@@ -1570,7 +1570,10 @@ attention.
 \paragraph{Results.}
 Figure~\ref{fig:sa3} and Table~\ref{tab:tornado} summarize the
 tornado results relative to the base expected annual cost of
-approximately \$525K under the optimized allocation.
+approximately \$525K under the optimized allocation. The figure
+shows cost deviations in the left panel and expected-utility
+deviations in the right panel, so the effect of changing
+risk tolerance $\rho$ is visible even though raw cost is unchanged.
 
 \begin{table}[H]
 \centering
@@ -1647,13 +1650,15 @@ of the utility calibration.
 \begin{figure}[H]
   \centering
   \includegraphics[width=\columnwidth]{figures/sa3_tornado.png}
-  \caption{Tornado diagram (SA3). Each bar shows the deviation of
-    expected annual cost from the base scenario (\$525K) when one
-    input is set to its low (green, cost-reducing) or high (red,
-    cost-increasing) extreme. Spill volume dominates with a swing
-    exceeding \$8M; failure rate uncertainty contributes a
-    \$0.79M swing. Risk tolerance $\rho$ does not affect
-    expected cost and is omitted from the cost axis.}
+  \caption{Tornado diagram (SA3). Left: deviation of expected annual
+    cost from the base scenario (\$525K) when one input is set to
+    its low (green, cost-reducing) or high (red, cost-increasing)
+    extreme. Right: deviation of expected utility from the base
+    scenario under the same perturbations. Spill volume dominates the
+    cost swing, failure-rate uncertainty is second, and risk
+    tolerance $\rho$ appears only in the utility panel because it
+    changes preferences rather than raw spill cost. Values are
+    printed inside each bar.}
   \label{fig:sa3}
 \end{figure}
 

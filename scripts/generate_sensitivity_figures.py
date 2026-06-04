@@ -272,7 +272,7 @@ def greedy_optimize_capped(lambda0, alpha, costs, budget, cap_i1, step=0.25, run
     return {"investment": inv, "remaining": remaining, "finalEU": current_eu}
 
 
-def mc_with_volume_override(lambdas, runs, vol_mode, rng):
+def mc_with_volume_override(lambdas, runs, vol_mode, rng, rho=RHO_DOLLARS):
     cat_min = {1: 50, 2: 1001, 3: 50, 4: 1}
     cat_max = {1: 145000, 2: 50000, 3: 1000, 4: 49}
 
@@ -293,7 +293,7 @@ def mc_with_volume_override(lambdas, runs, vol_mode, rng):
                     gallons = sample_gallons(category, m, rng)
                 year_cost += spill_cost(category, gallons)
         total_cost += year_cost
-        total_u += exp_utility(year_cost)
+        total_u += exp_utility(year_cost, rho)
 
     return {"expectedCost": total_cost / runs, "expectedUtility": total_u / runs}
 
@@ -369,6 +369,8 @@ def sa3_tornado(lambda0):
     lambda_high = {m: scenario_lambdas[m] * 2.0 for m in MODES}
     llow = mc_with_volume_override(lambda_low, runs, "base", mulberry32(SENS_SEED + 103))
     lhigh = mc_with_volume_override(lambda_high, runs, "base", mulberry32(SENS_SEED + 104))
+    rlow = mc_with_volume_override(scenario_lambdas, runs, "base", mulberry32(SENS_SEED + 105), RHO_DOLLARS * 0.1)
+    rhigh = mc_with_volume_override(scenario_lambdas, runs, "base", mulberry32(SENS_SEED + 106), RHO_DOLLARS * 10)
 
     rows = [
         {
@@ -376,18 +378,27 @@ def sa3_tornado(lambda0):
             "low": vmin["expectedCost"],
             "high": vmax["expectedCost"],
             "base": base["expectedCost"],
+            "lowUtility": vmin["expectedUtility"],
+            "highUtility": vmax["expectedUtility"],
+            "baseUtility": base["expectedUtility"],
         },
         {
             "label": "Failure rate lambda (x0.5 -> x2)",
             "low": llow["expectedCost"],
             "high": lhigh["expectedCost"],
             "base": base["expectedCost"],
+            "lowUtility": llow["expectedUtility"],
+            "highUtility": lhigh["expectedUtility"],
+            "baseUtility": base["expectedUtility"],
         },
         {
             "label": "Risk tolerance rho (x0.1 -> x10)",
             "low": base["expectedCost"],
             "high": base["expectedCost"],
             "base": base["expectedCost"],
+            "lowUtility": rlow["expectedUtility"],
+            "highUtility": rhigh["expectedUtility"],
+            "baseUtility": base["expectedUtility"],
         },
     ]
 
@@ -395,9 +406,11 @@ def sa3_tornado(lambda0):
         r["swing"] = abs(r["high"] - r["low"])
         r["lowDelta"] = r["low"] - r["base"]
         r["highDelta"] = r["high"] - r["base"]
+        r["lowUtilityDelta"] = r["lowUtility"] - r["baseUtility"]
+        r["highUtilityDelta"] = r["highUtility"] - r["baseUtility"]
 
     rows.sort(key=lambda x: x["swing"], reverse=True)
-    return rows, base["expectedCost"]
+    return rows, base["expectedCost"], base["expectedUtility"]
 
 
 def render_sa1(data, threshold, out_path):
@@ -471,24 +484,76 @@ def render_sa2(seeded_opt, capped_opt, cap_i1, out_path):
     plt.close(fig)
 
 
-def render_sa3(rows, base_cost, out_path):
-    labels = [r["label"] for r in rows]
-    lows = [r["lowDelta"] for r in rows]
-    highs = [r["highDelta"] for r in rows]
-    y = list(range(len(rows)))
+def _format_cost_delta(value):
+    if abs(value) >= 1_000_000:
+        return f"${value / 1_000_000:+.1f}M"
+    return f"${value / 1_000:+.0f}K"
 
-    fig, ax = plt.subplots(figsize=(11, 5), dpi=180)
 
-    for i in range(len(rows)):
-        ax.barh(y[i], lows[i], color="#22c55e" if lows[i] < 0 else "#ef4444", alpha=0.9)
-        ax.barh(y[i], highs[i], color="#ef4444" if highs[i] > 0 else "#22c55e", alpha=0.9)
+def _format_utility_delta(value):
+    return f"{value:+.3f}"
 
+
+def _annotate_barh(ax, value, y, text):
+    if abs(value) < 1e-9:
+        ax.text(0, y, "0", ha="center", va="center", fontsize=8, color="#334155")
+        return
+    x = value / 2
+    ax.text(x, y, text, ha="center", va="center", fontsize=8, color="white", fontweight="bold")
+
+
+def _draw_tornado_panel(ax, y, lows, highs, labels, xlabel, title, formatter):
+    for i in range(len(labels)):
+        low_color = "#22c55e" if lows[i] < 0 else "#ef4444"
+        high_color = "#ef4444" if highs[i] > 0 else "#22c55e"
+        ax.barh(y[i], lows[i], color=low_color, alpha=0.9)
+        ax.barh(y[i], highs[i], color=high_color, alpha=0.9)
+        _annotate_barh(ax, lows[i], y[i], formatter(lows[i]))
+        _annotate_barh(ax, highs[i], y[i], formatter(highs[i]))
+
+    span = max(max(abs(v) for v in lows + highs), 1e-6)
     ax.axvline(0, color="black", linewidth=1.1)
+    ax.set_xlim(-1.15 * span, 1.15 * span)
     ax.set_yticks(y)
     ax.set_yticklabels(labels)
-    ax.set_xlabel("Change in expected annual cost relative to base ($)")
-    ax.set_title(f"SA3: Tornado Diagram (Base expected cost = ${base_cost:,.0f})")
+    ax.set_xlabel(xlabel)
+    ax.set_title(title)
     ax.grid(axis="x", alpha=0.25)
+
+
+def render_sa3(rows, base_cost, base_utility, out_path):
+    labels = [r["label"] for r in rows]
+    cost_lows = [r["lowDelta"] for r in rows]
+    cost_highs = [r["highDelta"] for r in rows]
+    utility_lows = [r["lowUtilityDelta"] for r in rows]
+    utility_highs = [r["highUtilityDelta"] for r in rows]
+    y = list(range(len(rows)))
+
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5), dpi=180, sharey=True)
+
+    _draw_tornado_panel(
+        axes[0],
+        y,
+        cost_lows,
+        cost_highs,
+        labels,
+        "Change in expected annual cost ($)",
+        f"Expected Cost Delta (Base = ${base_cost:,.0f})",
+        _format_cost_delta,
+    )
+    _draw_tornado_panel(
+        axes[1],
+        y,
+        utility_lows,
+        utility_highs,
+        labels,
+        "Change in expected utility",
+        f"Expected Utility Delta (Base = {base_utility:.3f})",
+        _format_utility_delta,
+    )
+    axes[1].tick_params(labelleft=False)
+
+    fig.suptitle("SA3: Tornado Diagram", fontsize=14)
 
     fig.tight_layout()
     fig.savefig(out_path, bbox_inches="tight")
@@ -507,11 +572,11 @@ def main():
 
     sa1, threshold = sa1_budget_sweep(lambda0)
     seeded_opt, capped_opt, cap_i1 = sa2_cap(lambda0)
-    rows, base_cost = sa3_tornado(lambda0)
+    rows, base_cost, base_utility = sa3_tornado(lambda0)
 
     render_sa1(sa1, threshold, out_dir / "sa1_budget_sweep.png")
     render_sa2(seeded_opt, capped_opt, cap_i1, out_dir / "sa2_cap_comparison.png")
-    render_sa3(rows, base_cost, out_dir / "sa3_tornado.png")
+    render_sa3(rows, base_cost, base_utility, out_dir / "sa3_tornado.png")
 
     print("Generated:")
     print(out_dir / "sa1_budget_sweep.png")
